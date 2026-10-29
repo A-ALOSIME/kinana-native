@@ -5,6 +5,7 @@ export component KinanaModal {
     in property <length> modal-width: 680px;
     in property <length> modal-height: 580px;
     in property <length> modal-max-height: 720px;
+    in property <bool> show-default-header: true;
     callback close();
 
     x: 0px;
@@ -12,13 +13,12 @@ export component KinanaModal {
     width: 100%;
     height: 100%;
 
-    // Dim background overlay covering the entire window
+    // Dim backdrop covering entire window
     Rectangle {
         width: 100%;
         height: 100%;
-        background: #000000.transparentize(0.35);
+        background: #000000.transparentize(0.4);
 
-        // Clicking anywhere outside the modal card closes the modal!
         TouchArea {
             clicked => {
                 root.close();
@@ -26,7 +26,7 @@ export component KinanaModal {
         }
     }
 
-    // Modal Box Centered
+    // Modal Card Centered
     VerticalLayout {
         alignment: center;
 
@@ -37,23 +37,22 @@ export component KinanaModal {
                 width: root.modal-width;
                 max-height: root.modal-max-height;
                 border-radius: 20px;
-                background: #0a0b0e;
+                background: #0d0e15;
                 border-width: 1px;
-                border-color: #1f2128;
+                border-color: #1e212d;
                 clip: true;
 
-                // Stop backdrop clicks inside modal card from closing the modal
+                // Stop backdrop clicks inside modal card
                 TouchArea {}
 
                 VerticalLayout {
                     padding: 24px;
                     spacing: 16px;
 
-                    // Header row
-                    HorizontalLayout {
+                    if root.show-default-header && root.title != "": HorizontalLayout {
                         alignment: space-between;
 
-                        // Close button X on top left
+                        // Close button on left
                         Rectangle {
                             width: 32px;
                             height: 32px;
@@ -76,7 +75,7 @@ export component KinanaModal {
                             }
                         }
 
-                        if root.title != "": Text {
+                        Text {
                             text: root.title;
                             color: #ffffff;
                             font-family: Theme.font-family;

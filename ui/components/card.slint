@@ -10,36 +10,36 @@ export component ServiceCard {
     in property <bool> has-cover: false;
     in property <image> cover-image;
     in property <float> zoom-level: 1.0;
+    in property <bool> show-title: true;
 
     callback clicked();
     callback right-clicked();
 
-    width: 290px * root.zoom-level;
-    height: 175px * root.zoom-level;
+    width: 320px * root.zoom-level;
+    height: 180px * root.zoom-level;
 
     rect := Rectangle {
-        border-radius: 18px;
-        background: touch.has-hover ? #161822 : #0f1015;
-        border-width: 1px;
-        border-color: touch.has-hover ? #3b82f6 : #20222c;
+        border-radius: 16px;
+        background: #09090b;
+        border-width: 1.5px;
+        border-color: touch.has-hover ? #3b82f6 : #222533;
         clip: true;
 
-        animate background { duration: 150ms; }
         animate border-color { duration: 150ms; }
 
         // Poster Inner Frame
         Rectangle {
-            x: 8px;
-            y: 8px;
-            width: parent.width - 16px;
-            height: parent.height - 16px;
+            x: 6px;
+            y: 6px;
+            width: parent.width - 12px;
+            height: parent.height - 12px;
             border-radius: 12px;
             clip: true;
             background: root.brand-color;
 
             // Ambient background gradient
             Rectangle {
-                background: @linear-gradient(135deg, #000000.transparentize(0.15) 0%, #000000.transparentize(0.65) 100%);
+                background: @linear-gradient(135deg, #000000.transparentize(0.2) 0%, #000000.transparentize(0.6) 100%);
             }
 
             // Cover Image if provided
@@ -48,18 +48,20 @@ export component ServiceCard {
                 width: 100%;
                 height: 100%;
                 image-fit: contain;
+                horizontal-alignment: center;
+                vertical-alignment: center;
             }
 
             // Fallback: Large bold service title / initial
             if !root.has-cover: VerticalLayout {
                 alignment: center;
-                spacing: 6px;
+                spacing: 8px;
 
                 Text {
                     text: root.initial;
                     color: #ffffff;
                     font-family: Theme.font-family;
-                    font-size: 44px * root.zoom-level;
+                    font-size: 52px * root.zoom-level;
                     font-weight: 800;
                     horizontal-alignment: center;
                 }
@@ -74,15 +76,15 @@ export component ServiceCard {
                 }
             }
 
-            // Bottom subtle scrim gradient with service name and account count
-            Rectangle {
-                y: parent.height - (46px * root.zoom-level);
-                height: 46px * root.zoom-level;
-                background: @linear-gradient(0deg, #000000.transparentize(0.1) 0%, transparent 100%);
+            // Title scrim at bottom
+            if root.show-title || touch.has-hover: Rectangle {
+                y: parent.height - (44px * root.zoom-level);
+                height: 44px * root.zoom-level;
+                background: @linear-gradient(0deg, #000000.transparentize(0.15) 0%, transparent 100%);
 
                 HorizontalLayout {
-                    padding-left: 12px;
-                    padding-right: 12px;
+                    padding-left: 14px;
+                    padding-right: 14px;
                     alignment: space-between;
 
                     Text {
@@ -98,8 +100,8 @@ export component ServiceCard {
                         text: root.name;
                         color: #ffffff;
                         font-family: Theme.font-family;
-                        font-size: 14px * root.zoom-level;
-                        font-weight: 700;
+                        font-size: 15px * root.zoom-level;
+                        font-weight: 800;
                         vertical-alignment: center;
                         horizontal-alignment: right;
                     }

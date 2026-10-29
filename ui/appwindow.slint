@@ -244,9 +244,9 @@ export component MainWindow inherits Window {
 
                         // Red Lock Button (Matching Screenshot 4)
                         Rectangle {
-                            height: 36px;
+                            height: 38px;
                             border-radius: 10px;
-                            background: lock-touch.has-hover ? #7f1d1d : #991b1b;
+                            background: lock-touch.has-hover ? #b91c1c : #dc2626;
 
                             HorizontalLayout {
                                 padding-left: 14px;
@@ -281,17 +281,17 @@ export component MainWindow inherits Window {
 
                         // Settings Gear Button
                         Rectangle {
-                            width: 36px;
-                            height: 36px;
+                            width: 38px;
+                            height: 38px;
                             border-radius: 10px;
-                            background: set-touch.has-hover ? #222634 : #161822;
+                            background: set-touch.has-hover ? #222636 : #13151f;
                             border-width: 1px;
-                            border-color: #272a3a;
+                            border-color: #26293a;
 
                             Image {
                                 source: @image-url("assets/icons/settings.svg");
-                                width: 16px;
-                                height: 16px;
+                                width: 17px;
+                                height: 17px;
                                 horizontal-alignment: center;
                                 vertical-alignment: center;
                             }
@@ -306,17 +306,17 @@ export component MainWindow inherits Window {
 
                         // Export Backup Button
                         Rectangle {
-                            width: 36px;
-                            height: 36px;
+                            width: 38px;
+                            height: 38px;
                             border-radius: 10px;
-                            background: exp-touch.has-hover ? #222634 : #161822;
+                            background: exp-touch.has-hover ? #222636 : #13151f;
                             border-width: 1px;
-                            border-color: #272a3a;
+                            border-color: #26293a;
 
                             Image {
                                 source: @image-url("assets/icons/download.svg");
-                                width: 16px;
-                                height: 16px;
+                                width: 17px;
+                                height: 17px;
                                 horizontal-alignment: center;
                                 vertical-alignment: center;
                             }
@@ -331,17 +331,17 @@ export component MainWindow inherits Window {
 
                         // Import Backup Button
                         Rectangle {
-                            width: 36px;
-                            height: 36px;
+                            width: 38px;
+                            height: 38px;
                             border-radius: 10px;
-                            background: imp-touch.has-hover ? #222634 : #161822;
+                            background: imp-touch.has-hover ? #222636 : #13151f;
                             border-width: 1px;
-                            border-color: #272a3a;
+                            border-color: #26293a;
 
                             Image {
                                 source: @image-url("assets/icons/upload.svg");
-                                width: 16px;
-                                height: 16px;
+                                width: 17px;
+                                height: 17px;
                                 horizontal-alignment: center;
                                 vertical-alignment: center;
                             }
@@ -373,15 +373,15 @@ export component MainWindow inherits Window {
                                 spacing: 8px;
                                 alignment: center;
 
-                                // + Add Service Button
+                                // + Add Service Button (Solid White, Black Plus)
                                 Rectangle {
                                     width: 32px;
                                     height: 32px;
                                     border-radius: 8px;
-                                    background: add-btn-touch.has-hover ? #2563eb : #3b82f6;
+                                    background: add-btn-touch.has-hover ? #e4e4e7 : #ffffff;
 
                                     Image {
-                                        source: @image-url("assets/icons/plus.svg");
+                                        source: @image-url("assets/icons/plus-black.svg");
                                         width: 16px;
                                         height: 16px;
                                         horizontal-alignment: center;
@@ -497,17 +497,17 @@ export component MainWindow inherits Window {
                                     width: 32px;
                                     height: 32px;
                                     border-radius: 8px;
-                                    background: root.view_mode == "grid" ? #ffffff : #1e202b;
+                                    background: root.view_mode == "grid" ? #ffffff : (grid-hover.has-hover ? #252838 : #1e202b);
 
                                     Image {
-                                        source: @image-url("assets/icons/grid.svg");
+                                        source: root.view_mode == "grid" ? @image-url("assets/icons/grid-black.svg") : @image-url("assets/icons/grid.svg");
                                         width: 15px;
                                         height: 15px;
                                         horizontal-alignment: center;
                                         vertical-alignment: center;
                                     }
 
-                                    TouchArea {
+                                    grid-hover := TouchArea {
                                         clicked => {
                                             root.view_mode = "grid";
                                         }
@@ -520,17 +520,17 @@ export component MainWindow inherits Window {
                                     width: 32px;
                                     height: 32px;
                                     border-radius: 8px;
-                                    background: root.view_mode == "list" ? #ffffff : #1e202b;
+                                    background: root.view_mode == "list" ? #ffffff : (list-hover.has-hover ? #252838 : #1e202b);
 
                                     Image {
-                                        source: @image-url("assets/icons/list.svg");
+                                        source: root.view_mode == "list" ? @image-url("assets/icons/list-black.svg") : @image-url("assets/icons/list.svg");
                                         width: 15px;
                                         height: 15px;
                                         horizontal-alignment: center;
                                         vertical-alignment: center;
                                     }
 
-                                    TouchArea {
+                                    list-hover := TouchArea {
                                         clicked => {
                                             root.view_mode = "list";
                                         }
@@ -572,19 +572,9 @@ export component MainWindow inherits Window {
                             }
                         }
 
-                        Text {
-                            text: "كِنانة";
-                            color: #ffffff;
-                            font-family: Theme.font-family;
-                            font-size: 22px;
-                            font-weight: 800;
-                            vertical-alignment: center;
-                        }
-
                         Image {
-                            source: @image-url("assets/kinana-logo.svg");
-                            width: 30px;
-                            height: 30px;
+                            source: @image-url("assets/kinana-logo.png");
+                            height: 38px;
                             image-fit: contain;
                         }
                     }
@@ -903,13 +893,14 @@ export component MainWindow inherits Window {
                 // Grid View State (Netflix Grid matching Screenshot 5)
                 if root.services.length > 0 && root.view_mode == "grid": ScrollView {
                     VerticalLayout {
-                        padding: 32px;
+                        padding: 24px;
+                        padding-top: 28px;
                         spacing: 24px;
                         alignment: start;
 
                         HorizontalLayout {
                             alignment: end;
-                            spacing: 24px;
+                            spacing: 20px;
 
                             for service in root.services: ServiceCard {
                                 id: service.id;
@@ -1051,29 +1042,37 @@ export component MainWindow inherits Window {
         }
 
         // =========================================================================
-        // TOAST NOTIFICATION
+        // TOAST NOTIFICATION (Bottom Centered, Floating Pill)
         // =========================================================================
         if root.show_toast: Rectangle {
-            x: (parent.width - 320px) / 2;
-            y: 76px;
-            width: 320px;
+            x: (parent.width - 340px) / 2;
+            y: parent.height - 68px;
+            width: 340px;
             height: 44px;
-            border-radius: 12px;
-            background: #181922;
+            border-radius: 22px;
+            background: #141724;
             border-width: 1px;
-            border-color: #3b82f6;
+            border-color: #3b82f6.transparentize(0.4);
 
             HorizontalLayout {
-                padding-left: 14px;
-                padding-right: 14px;
+                padding-left: 16px;
+                padding-right: 16px;
                 alignment: center;
+                spacing: 8px;
+
+                Image {
+                    source: @image-url("assets/icons/check.svg");
+                    width: 15px;
+                    height: 15px;
+                    vertical-alignment: center;
+                }
 
                 Text {
                     text: root.toast_text;
                     color: #ffffff;
                     font-family: Theme.font-family;
                     font-size: 13px;
-                    font-weight: 600;
+                    font-weight: 700;
                     vertical-alignment: center;
                 }
             }
@@ -1311,33 +1310,34 @@ export component MainWindow inherits Window {
         // =========================================================================
         if root.show_details_modal: KinanaModal {
             title: "";
-            modal-width: 680px;
-            modal-max-height: 680px;
+            show-default-header: false;
+            modal-width: 780px;
+            modal-max-height: 720px;
             close => { root.show_details_modal = false; }
 
             VerticalLayout {
-                spacing: 16px;
+                spacing: 18px;
 
                 // Header matching Screenshot 2
                 HorizontalLayout {
                     alignment: space-between;
 
-                    // Left Side: Delete Service, Edit, Add Account
+                    // Left Side: Delete Service, + Add Account, Edit Service
                     HorizontalLayout {
-                        spacing: 8px;
+                        spacing: 10px;
                         alignment: center;
 
                         // Red Trash Button (Delete Service)
                         Rectangle {
-                            width: 38px;
-                            height: 38px;
-                            border-radius: 10px;
-                            background: del-svc-touch.has-hover ? #7f1d1d : #991b1b;
+                            width: 42px;
+                            height: 42px;
+                            border-radius: 12px;
+                            background: del-svc-touch.has-hover ? #991b1b : #dc2626;
 
                             Image {
                                 source: @image-url("assets/icons/trash.svg");
-                                width: 16px;
-                                height: 16px;
+                                width: 17px;
+                                height: 17px;
                                 horizontal-alignment: center;
                                 vertical-alignment: center;
                             }
@@ -1351,27 +1351,15 @@ export component MainWindow inherits Window {
                             }
                         }
 
-                        // Edit Service Button
+                        // Add Account (Solid White Pill Button)
                         KinanaButton {
-                            text: "تعديل الخدمة والصورة";
-                            variant: "outline";
-                            has-icon: true;
-                            icon: @image-url("assets/icons/pencil.svg");
-                            custom-font-size: 13px;
-                            custom-height: 38px;
-                            clicked => {
-                                root.show_details_modal = false;
-                                root.new_service_name = root.active_service_name;
-                                root.show_add_service_modal = true;
-                            }
-                        }
-
-                        // Add Account (Solid White Button)
-                        KinanaButton {
-                            text: "+ إضافة حساب";
+                            text: "إضافة حساب";
                             variant: "primary";
+                            has-icon: true;
+                            icon: @image-url("assets/icons/plus-black.svg");
                             custom-font-size: 13px;
-                            custom-height: 38px;
+                            custom-height: 42px;
+                            border-radius: 12px;
                             clicked => {
                                 root.new_acc_label = "";
                                 root.new_acc_username = "";
@@ -1383,38 +1371,55 @@ export component MainWindow inherits Window {
                                 root.show_add_account_modal = true;
                             }
                         }
+
+                        // Edit Service Button
+                        KinanaButton {
+                            text: "تعديل الخدمة والصورة";
+                            variant: "outline";
+                            has-icon: true;
+                            icon: @image-url("assets/icons/pencil.svg");
+                            custom-font-size: 13px;
+                            custom-height: 42px;
+                            border-radius: 12px;
+                            clicked => {
+                                root.show_details_modal = false;
+                                root.new_service_name = root.active_service_name;
+                                root.show_add_service_modal = true;
+                            }
+                        }
                     }
 
-                    // Right Side: Thumbnail Cover + Service Name + Count (Screenshot 2)
+                    // Right Side: Thumbnail Cover + Service Name + Count + Close X
                     HorizontalLayout {
-                        spacing: 12px;
+                        spacing: 14px;
                         alignment: center;
 
                         VerticalLayout {
                             alignment: center;
-                            spacing: 2px;
+                            spacing: 3px;
 
                             Text {
                                 text: root.active_service_name;
                                 color: #ffffff;
-                                font-size: 22px;
+                                font-size: 24px;
                                 font-weight: 800;
                                 horizontal-alignment: right;
                             }
 
                             Text {
                                 text: root.current_accounts.length + " حساب مسجل";
-                                color: #9ca3af;
-                                font-size: 12px;
-                                font-weight: 500;
+                                color: #8e95a5;
+                                font-size: 13px;
+                                font-weight: 600;
                                 horizontal-alignment: right;
                             }
                         }
 
+                        // Thumbnail
                         Rectangle {
-                            width: 52px;
-                            height: 36px;
-                            border-radius: 8px;
+                            width: 64px;
+                            height: 44px;
+                            border-radius: 10px;
                             background: #006837;
                             clip: true;
 
@@ -1425,16 +1430,39 @@ export component MainWindow inherits Window {
                                 image-fit: contain;
                             }
                         }
+
+                        // Close X Button
+                        Rectangle {
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 8px;
+                            background: close-det-x.has-hover ? #202330 : transparent;
+
+                            Image {
+                                source: @image-url("assets/icons/x.svg");
+                                width: 14px;
+                                height: 14px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            close-det-x := TouchArea {
+                                clicked => {
+                                    root.show_details_modal = false;
+                                }
+                                mouse-cursor: pointer;
+                            }
+                        }
                     }
                 }
 
                 // Accounts List (Matching Screenshot 2 Cards)
                 ScrollView {
-                    height: 480px;
+                    height: 500px;
 
                     VerticalLayout {
-                        spacing: 14px;
-                        padding-bottom: 10px;
+                        spacing: 16px;
+                        padding-bottom: 12px;
 
                         if root.current_accounts.length == 0: Text {
                             text: "لا توجد حسابات مسجلة تحت هذه الخدمة";
@@ -1445,34 +1473,34 @@ export component MainWindow inherits Window {
 
                         for acc in root.current_accounts: Rectangle {
                             border-radius: 16px;
-                            background: #111218;
+                            background: #11131c;
                             border-width: 1px;
-                            border-color: #20222e;
+                            border-color: #202434;
 
                             VerticalLayout {
-                                padding: 18px;
-                                spacing: 12px;
+                                padding: 20px;
+                                spacing: 14px;
 
                                 // Account Header Row: Label on right, actions on left
                                 HorizontalLayout {
                                     alignment: space-between;
 
-                                    // Action buttons on left: Duplicate, Edit, Trash
+                                    // Action buttons on left: Red Trash, Edit, Duplicate
                                     HorizontalLayout {
                                         spacing: 8px;
                                         alignment: center;
 
-                                        // Red Trash Button
+                                        // Red Trash Icon
                                         Rectangle {
-                                            width: 32px;
-                                            height: 32px;
+                                            width: 34px;
+                                            height: 34px;
                                             border-radius: 8px;
-                                            background: del-acc-touch.has-hover ? #7f1d1d : #991b1b;
+                                            background: del-acc-touch.has-hover ? #7f1d1d.transparentize(0.5) : transparent;
 
                                             Image {
                                                 source: @image-url("assets/icons/trash.svg");
-                                                width: 14px;
-                                                height: 14px;
+                                                width: 15px;
+                                                height: 15px;
                                                 horizontal-alignment: center;
                                                 vertical-alignment: center;
                                             }
@@ -1488,11 +1516,12 @@ export component MainWindow inherits Window {
                                         // Edit Button
                                         KinanaButton {
                                             text: "تعديل";
-                                            variant: "secondary";
+                                            variant: "outline";
                                             has-icon: true;
                                             icon: @image-url("assets/icons/pencil.svg");
                                             custom-font-size: 12px;
-                                            custom-height: 32px;
+                                            custom-height: 34px;
+                                            border-radius: 8px;
                                             clicked => {
                                                 root.new_acc_label = acc.label;
                                                 root.new_acc_username = acc.username;
@@ -1507,11 +1536,12 @@ export component MainWindow inherits Window {
                                         // Duplicate Button
                                         KinanaButton {
                                             text: "تكرار";
-                                            variant: "secondary";
+                                            variant: "outline";
                                             has-icon: true;
                                             icon: @image-url("assets/icons/copy.svg");
                                             custom-font-size: 12px;
-                                            custom-height: 32px;
+                                            custom-height: 34px;
+                                            border-radius: 8px;
                                             clicked => {
                                                 root.add_account(
                                                     root.active_service_id,
@@ -1527,39 +1557,47 @@ export component MainWindow inherits Window {
                                         }
                                     }
 
-                                    // Key Icon + Account Label
+                                    // Right: Account Label + Key Icon
                                     HorizontalLayout {
-                                        spacing: 8px;
+                                        spacing: 10px;
                                         alignment: center;
 
                                         Text {
                                             text: acc.label != "" ? acc.label : "حساب تسجيل دخول";
                                             color: #ffffff;
-                                            font-size: 16px;
-                                            font-weight: 700;
+                                            font-size: 18px;
+                                            font-weight: 800;
                                             vertical-alignment: center;
                                         }
 
-                                        Image {
-                                            source: @image-url("assets/icons/key.svg");
-                                            width: 16px;
-                                            height: 16px;
-                                            vertical-alignment: center;
+                                        Rectangle {
+                                            width: 30px;
+                                            height: 30px;
+                                            border-radius: 8px;
+                                            background: #1c202e;
+
+                                            Image {
+                                                source: @image-url("assets/icons/key.svg");
+                                                width: 15px;
+                                                height: 15px;
+                                                horizontal-alignment: center;
+                                                vertical-alignment: center;
+                                            }
                                         }
                                     }
                                 }
 
-                                // Field 1: Username Row (Matching Screenshot 2)
+                                // Field 1: Username Row (Two-line Vertical Layout)
                                 if acc.username != "": Rectangle {
-                                    height: 48px;
+                                    height: 52px;
                                     border-radius: 12px;
-                                    background: #161822;
+                                    background: #161824;
                                     border-width: 1px;
-                                    border-color: #242738;
+                                    border-color: #24283b;
 
                                     HorizontalLayout {
-                                        padding-left: 10px;
-                                        padding-right: 14px;
+                                        padding-left: 12px;
+                                        padding-right: 16px;
                                         alignment: space-between;
 
                                         KinanaButton {
@@ -1568,57 +1606,60 @@ export component MainWindow inherits Window {
                                             has-icon: true;
                                             icon: @image-url("assets/icons/copy.svg");
                                             custom-font-size: 12px;
-                                            custom-height: 32px;
+                                            custom-height: 34px;
+                                            border-radius: 8px;
                                             clicked => { root.copy_to_clipboard(acc.username); }
                                         }
 
-                                        HorizontalLayout {
-                                            spacing: 12px;
+                                        VerticalLayout {
                                             alignment: center;
+                                            spacing: 2px;
+
+                                            Text {
+                                                text: "اسم المستخدم";
+                                                color: #8e95a5;
+                                                font-size: 11px;
+                                                font-weight: 700;
+                                                horizontal-alignment: right;
+                                            }
 
                                             Text {
                                                 text: acc.username;
                                                 color: #ffffff;
                                                 font-size: 14px;
                                                 font-weight: 700;
-                                                vertical-alignment: center;
-                                            }
-
-                                            Text {
-                                                text: "اسم المستخدم:";
-                                                color: #8e95a5;
-                                                font-size: 13px;
-                                                vertical-alignment: center;
+                                                horizontal-alignment: right;
                                             }
                                         }
                                     }
                                 }
 
-                                // Field 2: Password Row (Matching Screenshot 2)
+                                // Field 2: Password Row (Two-line Vertical Layout)
                                 if acc.has_password: Rectangle {
-                                    height: 48px;
+                                    height: 52px;
                                     border-radius: 12px;
-                                    background: #161822;
+                                    background: #161824;
                                     border-width: 1px;
-                                    border-color: #242738;
+                                    border-color: #24283b;
 
                                     HorizontalLayout {
-                                        padding-left: 10px;
-                                        padding-right: 14px;
+                                        padding-left: 12px;
+                                        padding-right: 16px;
                                         alignment: space-between;
 
                                         HorizontalLayout {
                                             spacing: 8px;
                                             alignment: center;
 
-                                            // White Copy Password Button
+                                            // Solid White Copy Password Button
                                             KinanaButton {
                                                 text: "نسخ كلمة المرور";
                                                 variant: "primary";
                                                 has-icon: true;
                                                 icon: @image-url("assets/icons/copy-black.svg");
                                                 custom-font-size: 12px;
-                                                custom-height: 32px;
+                                                custom-height: 34px;
+                                                border-radius: 8px;
                                                 clicked => {
                                                     root.copy_account_password(root.active_service_id, acc.id);
                                                 }
@@ -1626,13 +1667,13 @@ export component MainWindow inherits Window {
 
                                             // Eye Reveal Button
                                             Rectangle {
-                                                width: 32px;
-                                                height: 32px;
+                                                width: 34px;
+                                                height: 34px;
                                                 border-radius: 8px;
                                                 background: eye-touch.has-hover ? #252838 : transparent;
 
                                                 Image {
-                                                    source: @image-url("assets/icons/eye.svg");
+                                                    source: acc.is_revealed ? @image-url("assets/icons/eye-off.svg") : @image-url("assets/icons/eye.svg");
                                                     width: 16px;
                                                     height: 16px;
                                                     horizontal-alignment: center;
@@ -1648,39 +1689,40 @@ export component MainWindow inherits Window {
                                             }
                                         }
 
-                                        HorizontalLayout {
-                                            spacing: 12px;
+                                        VerticalLayout {
                                             alignment: center;
+                                            spacing: 2px;
 
                                             Text {
-                                                text: acc.is_revealed ? acc.actual_password : "••••••••••••••••";
-                                                color: #ffffff;
-                                                font-size: 15px;
+                                                text: "كلمة المرور";
+                                                color: #8e95a5;
+                                                font-size: 11px;
                                                 font-weight: 700;
-                                                vertical-alignment: center;
+                                                horizontal-alignment: right;
                                             }
 
                                             Text {
-                                                text: "كلمة المرور:";
-                                                color: #8e95a5;
-                                                font-size: 13px;
-                                                vertical-alignment: center;
+                                                text: acc.is_revealed ? acc.actual_password : "••••••••••••••••";
+                                                color: acc.is_revealed ? #34d399 : #ffffff;
+                                                font-size: 15px;
+                                                font-weight: 700;
+                                                horizontal-alignment: right;
                                             }
                                         }
                                     }
                                 }
 
-                                // Field 3: Recovery Key Row (Amber, Matching Screenshot 2)
+                                // Field 3: Recovery Key Row (Amber theme)
                                 if acc.recovery_key != "": Rectangle {
-                                    height: 48px;
+                                    height: 52px;
                                     border-radius: 12px;
                                     background: #1b160f;
                                     border-width: 1px;
                                     border-color: #d97706.transparentize(0.4);
 
                                     HorizontalLayout {
-                                        padding-left: 10px;
-                                        padding-right: 14px;
+                                        padding-left: 12px;
+                                        padding-right: 16px;
                                         alignment: space-between;
 
                                         HorizontalLayout {
@@ -1693,13 +1735,14 @@ export component MainWindow inherits Window {
                                                 has-icon: true;
                                                 icon: @image-url("assets/icons/copy-amber.svg");
                                                 custom-font-size: 12px;
-                                                custom-height: 32px;
+                                                custom-height: 34px;
+                                                border-radius: 8px;
                                                 clicked => { root.copy_to_clipboard(acc.recovery_key); }
                                             }
 
                                             Rectangle {
-                                                width: 32px;
-                                                height: 32px;
+                                                width: 34px;
+                                                height: 34px;
                                                 border-radius: 8px;
                                                 background: eye-rec-touch.has-hover ? #2d2012 : transparent;
 
@@ -1717,24 +1760,24 @@ export component MainWindow inherits Window {
                                             }
                                         }
 
-                                        HorizontalLayout {
-                                            spacing: 12px;
+                                        VerticalLayout {
                                             alignment: center;
+                                            spacing: 2px;
 
                                             Text {
-                                                text: "••••••••••••••••";
-                                                color: #f59e0b;
-                                                font-size: 15px;
+                                                text: "مفتاح استرداد الحساب للطوارئ (Recovery Key)";
+                                                color: #d97706;
+                                                font-size: 11px;
                                                 font-weight: 700;
-                                                vertical-alignment: center;
+                                                horizontal-alignment: right;
                                             }
 
                                             Text {
-                                                text: "مفتاح استرداد الحساب للطوارئ (Recovery Key):";
-                                                color: #f59e0b;
-                                                font-size: 13px;
-                                                font-weight: 600;
-                                                vertical-alignment: center;
+                                                text: acc.recovery_key;
+                                                color: #fbbf24;
+                                                font-size: 14px;
+                                                font-weight: 700;
+                                                horizontal-alignment: right;
                                             }
                                         }
                                     }

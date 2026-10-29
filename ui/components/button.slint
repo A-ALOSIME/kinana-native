@@ -5,46 +5,47 @@ export component KinanaButton {
     in property <string> variant: "primary"; // "primary" (white), "secondary", "danger", "ghost", "outline", "amber"
     in property <bool> enabled: true;
     in property <length> custom-font-size: 13px;
-    in property <length> custom-height: 40px;
+    in property <length> custom-height: 38px;
     in property <length> border-radius: 10px;
     in property <bool> has-icon: false;
     in property <image> icon;
     
     callback clicked();
 
-    min-height: root.custom-height;
-    horizontal-stretch: 0;
+    height: root.custom-height;
 
     rect := Rectangle {
+        height: root.custom-height;
         border-radius: root.border-radius;
         background: !root.enabled ? #14151b :
             touch.pressed ? (
                 root.variant == "primary" ? #d4d4d8 :
                 root.variant == "danger" ? #7f1d1d :
                 root.variant == "amber" ? #b45309 :
-                root.variant == "secondary" ? #222533 : #181922
+                root.variant == "secondary" ? #252838 : #181922
             ) :
             touch.has-hover ? (
                 root.variant == "primary" ? #f4f4f5 :
                 root.variant == "danger" ? #b91c1c :
                 root.variant == "amber" ? #d97706 :
-                root.variant == "secondary" ? #1c1e28 : #15161e
+                root.variant == "secondary" ? #1e2130 : #15161e
             ) : (
                 root.variant == "primary" ? #ffffff :
-                root.variant == "danger" ? #991b1b :
-                root.variant == "amber" ? #b45309.transparentize(0.7) :
-                root.variant == "secondary" ? #14151b :
+                root.variant == "danger" ? #dc2626 :
+                root.variant == "amber" ? #78350f.transparentize(0.4) :
+                root.variant == "secondary" ? #1a1d29 :
                 root.variant == "outline" ? transparent : transparent
             );
 
-        border-width: (root.variant == "secondary" || root.variant == "ghost" || root.variant == "outline" || root.variant == "amber") ? 1px : 0px;
+        border-width: (root.variant == "secondary" || root.variant == "outline" || root.variant == "amber") ? 1px :
+            (root.variant == "ghost" && touch.has-hover) ? 1px : 0px;
         border-color: (root.variant == "amber") ? #d97706 :
-            (root.variant == "outline") ? #ffffff.transparentize(0.75) :
-            (root.variant == "secondary") ? #232633 :
-            (touch.has-hover ? #2e3244 : transparent);
+            (root.variant == "outline") ? #3f4255 :
+            (root.variant == "secondary") ? #282c3c :
+            (root.variant == "ghost") ? #282c3c : transparent;
 
-        animate background { duration: 120ms; }
-        animate border-color { duration: 120ms; }
+        animate background { duration: 100ms; }
+        animate border-color { duration: 100ms; }
 
         HorizontalLayout {
             padding-left: 14px;
@@ -57,13 +58,14 @@ export component KinanaButton {
                 width: 15px;
                 height: 15px;
                 vertical-alignment: center;
+                horizontal-alignment: center;
             }
 
             if root.text != "": Text {
                 text: root.text;
                 color: !root.enabled ? #71717a :
                     (root.variant == "primary" ? #000000 :
-                     root.variant == "amber" ? #f59e0b :
+                     root.variant == "amber" ? #fbbf24 :
                      root.variant == "danger" ? #ffffff :
                      root.variant == "ghost" ? (touch.has-hover ? #ffffff : #a1a1aa) :
                      #ffffff);
