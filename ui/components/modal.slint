@@ -1,40 +1,69 @@
 import { Theme } from "../theme.slint";
 import { KinanaButton } from "./button.slint";
+import { ScrollView } from "std-widgets.slint";
 
 export component KinanaModal {
     in property <string> title: "نافذة";
-    in property <length> modal-width: 480px;
-    in property <length> modal-height: 420px;
+    in property <length> modal-width: 520px;
+    in property <length> modal-height: 520px;
+    in property <length> modal-max-height: 680px;
     callback close();
 
     Rectangle {
-        background: #000000.transparentize(0.4);
-        
-        // Block clicks to background
-        TouchArea {}
+        background: #000000.transparentize(0.45);
 
+        // Clicking outside the card closes modal
+        TouchArea {
+            clicked => {
+                root.close();
+            }
+        }
+
+        // Modal Box
         Rectangle {
             width: root.modal-width;
-            height: root.modal-height;
-            border-radius: 14px;
-            background: Theme.surface;
+            max-height: root.modal-max-height;
+            border-radius: 20px;
+            background: #111319;
             border-width: 1px;
-            border-color: Theme.border;
+            border-color: #242735;
+            drop-shadow-blur: 24px;
+            drop-shadow-color: #000000.transparentize(0.5);
+
+            // Block clicks on modal card from triggering backdrop close
+            TouchArea {}
 
             VerticalLayout {
-                padding: 20px;
+                padding: 24px;
                 spacing: 16px;
 
                 // Title bar
                 HorizontalLayout {
                     alignment: space-between;
 
-                    KinanaButton {
-                        text: "✕";
-                        variant: "ghost";
-                        custom-font-size: 14px;
-                        clicked => {
-                            root.close();
+                    // Close Button X
+                    Rectangle {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 10px;
+                        background: close-touch.has-hover ? #242736 : #181a24;
+                        border-width: 1px;
+                        border-color: #2e3244;
+
+                        Text {
+                            text: "✕";
+                            color: close-touch.has-hover ? #ffffff : #9ca3af;
+                            font-size: 15px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+
+                        close-touch := TouchArea {
+                            clicked => {
+                                root.close();
+                            }
+                            mouse-cursor: pointer;
                         }
                     }
 
@@ -42,9 +71,10 @@ export component KinanaModal {
                         text: root.title;
                         color: Theme.text-primary;
                         font-family: Theme.font-family;
-                        font-size: 18px;
+                        font-size: 19px;
                         font-weight: 700;
                         vertical-alignment: center;
+                        horizontal-alignment: right;
                     }
                 }
 

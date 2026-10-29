@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <defs>
+    <linearGradient id="mcBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111215"/>
+      <stop offset="100%" stop-color="#1A1C23"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#mcBg)"/>
+  <g transform="translate(320, 140)">
+    <circle cx="-42" cy="0" r="62" fill="#EB001B"/>
+    <circle cx="42" cy="0" r="62" fill="#F79E1B"/>
+    <path d="M 0,-47.5 A 62 62 0 0 0 -22.5,0 A 62 62 0 0 0 0,47.5 A 62 62 0 0 0 22.5,0 A 62 62 0 0 0 0,-47.5 Z" fill="#FF5F00"/>
+  </g>
+  <text x="320" y="250" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="32" font-weight="600" fill="#FFFFFF" letter-spacing="2">mastercard</text>
+</svg>

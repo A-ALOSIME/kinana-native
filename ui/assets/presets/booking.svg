@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <defs>
+    <linearGradient id="bkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00224F"/>
+      <stop offset="100%" stop-color="#003580"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#bkBg)"/>
+  <g transform="translate(320, 180)">
+    <text x="0" y="0" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="64" font-weight="800" fill="#FFFFFF" letter-spacing="-1.5">Booking<tspan fill="#00BAFC">.com</tspan></text>
+  </g>
+  <text x="320" y="240" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#7FA9E0" letter-spacing="3">HOTELS &amp; TRAVEL</text>
+</svg>

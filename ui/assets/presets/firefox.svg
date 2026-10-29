@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <defs>
+    <linearGradient id="ffBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1A102F"/>
+    </linearGradient>
+    <radialGradient id="ffGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E55B3C" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ffA" x1="70%" y1="0%" x2="30%" y2="80%">
+      <stop offset="30%" stop-color="#FFDD55"/>
+      <stop offset="60%" stop-color="#FF8855"/>
+      <stop offset="100%" stop-color="#DD0066"/>
+    </linearGradient>
+    <radialGradient id="ffB" cx="40%" cy="70%" r="60%">
+      <stop offset="40%" stop-color="#7744DD"/>
+      <stop offset="100%" stop-color="#AA22DD"/>
+    </radialGradient>
+    <linearGradient id="ffC" x1="80%" y1="20%" x2="40%" y2="80%">
+      <stop offset="20%" stop-color="#FFDD55"/>
+      <stop offset="100%" stop-color="#FF3333"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#ffBg)"/>
+  <rect width="640" height="360" fill="url(#ffGlow)"/>
+  <g transform="translate(225, 85) scale(0.37)">
+    <path d="M256 212S224 108 320 56c24 48 92 112 104 148 0-24-20-60-20-60A204 192 0 1156 272S152 140 188 132c-8 28 4 64 4 64" fill="url(#ffA)"/>
+    <circle cx="256" cy="268" r="104" fill="url(#ffB)"/>
+    <path d="M84 180l172 48c-24 44-64 12-92 56a88 88 0 10136-80s132 12 68 168H112m144 100h4" fill="url(#ffA)"/>
+    <path d="M140 172c64 0 48 28 116 56-72 24-92-36-152 0 20 36 48 32 48 32 4 172 288 116 268-68A200 186.4 188 0168 324c-36-72-4-160 64-204" fill="url(#ffC)"/>
+  </g>
+</svg>

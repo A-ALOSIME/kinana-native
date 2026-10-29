@@ -4,7 +4,8 @@ import { Theme } from "./theme.slint";
 import { KinanaButton } from "./components/button.slint";
 import { KinanaInput } from "./components/input.slint";
 import { KinanaModal } from "./components/modal.slint";
-import { ScrollView, Slider, CheckBox } from "std-widgets.slint";
+import { ServiceCard } from "./components/card.slint";
+import { ScrollView } from "std-widgets.slint";
 
 export struct ServiceItem {
     id: string,
@@ -13,6 +14,8 @@ export struct ServiceItem {
     category: string,
     accounts_count: int,
     badge_color: color,
+    has_cover: bool,
+    cover_image: image,
 }
 
 export struct AccountItem {
@@ -27,9 +30,12 @@ export struct AccountItem {
 }
 
 export component MainWindow inherits Window {
-    title: "كنانة - Kinana Native";
-    min-width: 1000px;
-    min-height: 720px;
+    title: "كنانة";
+    icon: @image-url("assets/icon.png");
+    min-width: 950px;
+    min-height: 650px;
+    preferred-width: 1200px;
+    preferred-height: 800px;
     default-font-family: Theme.font-family;
     background: Theme.bg-dark;
 
@@ -51,7 +57,6 @@ export component MainWindow inherits Window {
     in-out property <bool> show_add_service_modal: false;
     in-out property <bool> show_details_modal: false;
     in-out property <bool> show_add_account_modal: false;
-    in-out property <bool> show_generator_modal: false;
     in-out property <bool> show_settings_modal: false;
     in-out property <bool> show_recovery_modal: false;
 
@@ -76,6 +81,9 @@ export component MainWindow inherits Window {
     in-out property <string> new_service_recovery: "";
     in-out property <string> new_service_notes: "";
     in-out property <string> new_service_url: "";
+    in-out property <string> new_service_icon_path: "";
+    in-out property <bool> new_service_has_custom_icon: false;
+    in-out property <image> new_service_preview_icon;
 
     // Form fields for Add Account
     in-out property <string> new_acc_label: "";
@@ -88,10 +96,6 @@ export component MainWindow inherits Window {
 
     // Form fields for Password Generator
     in-out property <string> gen_password: "";
-    in-out property <int> gen_length: 16;
-    in-out property <bool> gen_use_symbols: true;
-    in-out property <bool> gen_use_numbers: true;
-    in-out property <bool> gen_use_uppercase: true;
 
     // Form fields for Settings
     in-out property <int> auto_lock_timeout_mins: 5;
@@ -104,35 +108,32 @@ export component MainWindow inherits Window {
     // Form fields for Recovery
     in-out property <string> recovery_input_key: "";
     in-out property <string> recovery_new_pass: "";
+    in-out property <string> recovery_confirm_pass: "";
 
-    // Search & Filter
-    in-out property <string> search_text: "";
-    in-out property <string> selected_category: "الكل";
-
-    // Callbacks to Rust
+    // Callbacks to Rust Backend
+    callback try_create_vault(string, string);
     callback try_unlock(string);
     callback try_quick_unlock();
-    callback try_create_vault(string, string);
-    callback try_recover_vault(string, string);
+    callback recover_vault(string, string, string);
     callback lock_vault();
-    callback copy_secure_text(string);
-    callback copy_service_password(string);
-    callback copy_account_password(string, string);
-    callback open_service_details(string, string, string);
-    callback add_service(string, string, string, string, string, string, string, string);
-    callback delete_service(string);
-    callback duplicate_service(string);
-    callback add_account(string, string, string, string, string, string, string, string);
-    callback delete_account(string, string);
-    callback request_generate_password(int, bool, bool, bool);
     callback export_backup();
     callback import_backup();
+    callback add_service(string, string, string, string, string, string, string, string, string);
+    callback delete_service(string);
+    callback duplicate_service(string);
+    callback open_service_details(string, string, string);
+    callback add_account(string, string, string, string, string, string, string, string);
+    callback delete_account(string, string);
+    callback copy_service_password(string);
+    callback copy_account_password(string, string);
+    callback copy_to_clipboard(string);
+    callback request_generate_password();
     callback change_master_password(string, string, string);
     callback set_auto_lock_timeout(int);
     callback toggle_auto_unlock(bool);
     callback open_external_url(string);
-    callback search_services(string);
-    callback filter_by_category(string);
+    callback pick_service_cover();
+    callback remove_service_cover();
 
     // =========================================================================
     // ROOT LAYOUT
@@ -144,120 +145,295 @@ export component MainWindow inherits Window {
             padding: 0px;
             spacing: 0px;
 
-            // TOP NAVIGATION BAR (Only visible on dashboard)
+            // =====================================================================
+            // TOP BAR (Visible only when unlocked on dashboard)
+            // =====================================================================
             if root.current_view == "dashboard": Rectangle {
-                height: 70px;
-                background: Theme.surface;
-                border-width: 1px;
-                border-color: Theme.border;
+                height: 64px;
+                background: #0d0f15;
+
+                // Bottom border separator line
+                Rectangle {
+                    y: parent.height - 1px;
+                    height: 1px;
+                    background: #1c1e28;
+                }
 
                 HorizontalLayout {
-                    padding-left: 24px;
-                    padding-right: 24px;
+                    padding-left: 20px;
+                    padding-right: 20px;
                     alignment: space-between;
 
-                    // Left Side: Actions (Add Service, Generator, Settings, Lock)
+                    // Left Side: Actions (Export, Import, Settings, Red Lock)
                     HorizontalLayout {
-                        spacing: 10px;
+                        spacing: 8px;
                         alignment: center;
 
-                        KinanaButton {
-                            text: "+ خدمة جديدة";
-                            variant: "primary";
-                            clicked => {
-                                root.new_service_name = "";
-                                root.new_service_category = "عام";
-                                root.new_service_username = "";
-                                root.new_service_password = "";
-                                root.new_service_email = "";
-                                root.new_service_recovery = "";
-                                root.new_service_notes = "";
-                                root.new_service_url = "";
-                                root.show_add_service_modal = true;
+                        // Red Lock Button (Matching Screenshot 4)
+                        Rectangle {
+                            height: 36px;
+                            border-radius: 10px;
+                            background: lock-touch.has-hover ? #b91c1c : #dc2626;
+
+                            HorizontalLayout {
+                                padding-left: 14px;
+                                padding-right: 14px;
+                                spacing: 6px;
+                                alignment: center;
+
+                                Text {
+                                    text: "قفل";
+                                    color: #ffffff;
+                                    font-family: Theme.font-family;
+                                    font-size: 13px;
+                                    font-weight: 700;
+                                    vertical-alignment: center;
+                                }
+                            }
+
+                            lock-touch := TouchArea {
+                                clicked => {
+                                    root.lock_vault();
+                                }
+                                mouse-cursor: pointer;
                             }
                         }
 
-                        KinanaButton {
-                            text: "مولد الرموز";
-                            variant: "secondary";
-                            clicked => {
-                                root.request_generate_password(root.gen_length, root.gen_use_symbols, root.gen_use_numbers, root.gen_use_uppercase);
-                                root.show_generator_modal = true;
+                        // Settings Gear Button
+                        Rectangle {
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 10px;
+                            background: set-touch.has-hover ? #222634 : #161822;
+                            border-width: 1px;
+                            border-color: #272a3a;
+
+                            Text {
+                                text: "⚙";
+                                color: #ffffff;
+                                font-size: 15px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            set-touch := TouchArea {
+                                clicked => {
+                                    root.show_settings_modal = true;
+                                }
+                                mouse-cursor: pointer;
                             }
                         }
 
-                        KinanaButton {
-                            text: "الإعدادات";
-                            variant: "secondary";
-                            clicked => {
-                                root.show_settings_modal = true;
+                        // Export Backup Button
+                        Rectangle {
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 10px;
+                            background: exp-touch.has-hover ? #222634 : #161822;
+                            border-width: 1px;
+                            border-color: #272a3a;
+
+                            Text {
+                                text: "⤓";
+                                color: #ffffff;
+                                font-size: 16px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            exp-touch := TouchArea {
+                                clicked => {
+                                    root.export_backup();
+                                }
+                                mouse-cursor: pointer;
                             }
                         }
 
-                        KinanaButton {
-                            text: "قفل الخزنة";
-                            variant: "danger";
-                            clicked => {
-                                root.lock_vault();
+                        // Import Backup Button
+                        Rectangle {
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 10px;
+                            background: imp-touch.has-hover ? #222634 : #161822;
+                            border-width: 1px;
+                            border-color: #272a3a;
+
+                            Text {
+                                text: "⤒";
+                                color: #ffffff;
+                                font-size: 16px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+
+                            imp-touch := TouchArea {
+                                clicked => {
+                                    root.import_backup();
+                                }
+                                mouse-cursor: pointer;
                             }
                         }
                     }
 
-                    // Center: Search Bar
+                    // Center: Floating Rounded Toolbar Capsule (Matching Screenshot 4)
                     HorizontalLayout {
-                        alignment: center;
-                        width: 320px;
-
-                        KinanaInput {
-                            placeholder: "ابحث في الخدمات والحسابات...";
-                            text <=> root.search_text;
-                            edited(query) => {
-                                root.search_services(query);
-                            }
-                        }
-                    }
-
-                    // Right Side: Logo & Badge
-                    HorizontalLayout {
-                        spacing: 12px;
                         alignment: center;
 
                         Rectangle {
-                            border-radius: 6px;
-                            background: #10b981.transparentize(0.85);
+                            border-radius: 16px;
+                            background: #141620;
                             border-width: 1px;
-                            border-color: #10b981.transparentize(0.5);
+                            border-color: #232635;
 
                             HorizontalLayout {
                                 padding-left: 8px;
                                 padding-right: 8px;
                                 padding-top: 4px;
                                 padding-bottom: 4px;
+                                spacing: 8px;
+                                alignment: center;
+
+                                // + Add Service Button
+                                Rectangle {
+                                    width: 32px;
+                                    height: 32px;
+                                    border-radius: 8px;
+                                    background: add-btn-touch.has-hover ? #2563eb : #3b82f6;
+
+                                    Text {
+                                        text: "+";
+                                        color: #ffffff;
+                                        font-size: 18px;
+                                        font-weight: 700;
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                    }
+
+                                    add-btn-touch := TouchArea {
+                                        clicked => {
+                                            root.new_service_name = "";
+                                            root.new_service_category = "عام";
+                                            root.new_service_username = "";
+                                            root.new_service_password = "";
+                                            root.new_service_email = "";
+                                            root.new_service_recovery = "";
+                                            root.new_service_notes = "";
+                                            root.new_service_url = "";
+                                            root.new_service_icon_path = "";
+                                            root.new_service_has_custom_icon = false;
+                                            root.request_generate_password();
+                                            root.show_add_service_modal = true;
+                                        }
+                                        mouse-cursor: pointer;
+                                    }
+                                }
+
+                                // Separator
+                                Rectangle {
+                                    width: 1px;
+                                    height: 18px;
+                                    background: #282c3c;
+                                }
+
+                                // 100% Zoom Indicator
+                                Rectangle {
+                                    border-radius: 6px;
+                                    background: #1a1c27;
+
+                                    HorizontalLayout {
+                                        padding-left: 8px;
+                                        padding-right: 8px;
+                                        alignment: center;
+
+                                        Text {
+                                            text: "100%";
+                                            color: #cbd5e1;
+                                            font-size: 11px;
+                                            font-weight: 700;
+                                            vertical-alignment: center;
+                                        }
+                                    }
+                                }
+
+                                // Separator
+                                Rectangle {
+                                    width: 1px;
+                                    height: 18px;
+                                    background: #282c3c;
+                                }
+
+                                // Grid View Icon Button (Active)
+                                Rectangle {
+                                    width: 32px;
+                                    height: 32px;
+                                    border-radius: 8px;
+                                    background: #202434;
+
+                                    Text {
+                                        text: "⊞";
+                                        color: #ffffff;
+                                        font-size: 16px;
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Right Side: Brand & Status Pill (Matching Screenshot 4)
+                    HorizontalLayout {
+                        spacing: 12px;
+                        alignment: center;
+
+                        // Pill Badge
+                        Rectangle {
+                            border-radius: 20px;
+                            background: #161822;
+                            border-width: 1px;
+                            border-color: #242736;
+
+                            HorizontalLayout {
+                                padding-left: 12px;
+                                padding-right: 12px;
+                                padding-top: 5px;
+                                padding-bottom: 5px;
+                                alignment: center;
 
                                 Text {
-                                    text: "Native • Rust";
-                                    color: #10b981;
+                                    text: "مفتوحة (" + root.services.length + " خدمات / " + root.total_accounts_count + " حساب)";
+                                    color: #cbd5e1;
                                     font-family: Theme.font-family;
-                                    font-size: 11px;
+                                    font-size: 12px;
                                     font-weight: 700;
+                                    vertical-alignment: center;
                                 }
                             }
                         }
 
                         Text {
                             text: "كِنانة";
-                            color: Theme.text-primary;
+                            color: #ffffff;
                             font-family: Theme.font-family;
                             font-size: 22px;
-                            font-weight: 700;
+                            font-weight: 800;
                             vertical-alignment: center;
+                        }
+
+                        Image {
+                            source: @image-url("assets/kinana-logo.svg");
+                            width: 30px;
+                            height: 30px;
+                            image-fit: contain;
                         }
                     }
                 }
             }
 
             // =========================================================================
-            // VIEW 1: SETUP VIEW (When no vault exists)
+            // VIEW 1: SETUP VIEW (First Run)
             // =========================================================================
             if root.current_view == "setup": Rectangle {
                 VerticalLayout {
@@ -267,26 +443,46 @@ export component MainWindow inherits Window {
 
                         Rectangle {
                             width: 440px;
-                            border-radius: 16px;
-                            background: Theme.surface;
+                            border-radius: 24px;
+                            background: #111319;
                             border-width: 1px;
-                            border-color: Theme.border;
+                            border-color: #202330;
 
                             VerticalLayout {
-                                padding: 32px;
+                                padding: 36px;
                                 spacing: 20px;
 
+                                HorizontalLayout {
+                                    alignment: center;
+                                    spacing: 14px;
+
+                                    Image {
+                                        source: @image-url("assets/kinana-logo.png");
+                                        width: 48px;
+                                        height: 48px;
+                                        image-fit: contain;
+                                    }
+
+                                    Text {
+                                        text: "كِنانة";
+                                        color: #ffffff;
+                                        font-size: 30px;
+                                        font-weight: 800;
+                                        vertical-alignment: center;
+                                    }
+                                }
+
                                 Text {
-                                    text: "مرحباً بك في كِنانة";
-                                    color: Theme.text-primary;
-                                    font-size: 24px;
-                                    font-weight: 700;
+                                    text: "خزنة كلمات المرور الآمنة والمشفرة محلياً بالكامل";
+                                    color: #9ca3af;
+                                    font-size: 13px;
+                                    font-weight: 500;
                                     horizontal-alignment: center;
                                 }
 
                                 Text {
-                                    text: "مدير كلمات مرور محلي وآمن لسطح المكتب. أنشئ خزنتك المشفرة الآن لحماية بياناتك.";
-                                    color: Theme.text-secondary;
+                                    text: "لم يتم العثور على خزنة سابقة. قم بإنشاء خزنتك الآن بتعيين كلمة مرور رئيسية أو رمز PIN قوي:";
+                                    color: #cbd5e1;
                                     font-size: 13px;
                                     wrap: word-wrap;
                                     horizontal-alignment: center;
@@ -294,28 +490,38 @@ export component MainWindow inherits Window {
 
                                 if root.status_message != "": Text {
                                     text: root.status_message;
-                                    color: root.is_error_status ? Theme.danger : Theme.accent;
+                                    color: root.is_error_status ? #fca5a5 : #6ee7b7;
                                     font-size: 13px;
+                                    font-weight: 600;
                                     horizontal-alignment: center;
                                 }
 
                                 KinanaInput {
-                                    label: "رمز المرور الرئيسي للخزنة";
+                                    label: "كلمة المرور الرئيسية أو رمز PIN:";
                                     placeholder: "اكتب رمز مرور قوي لا تنساه...";
                                     password: true;
+                                    text-align: center;
+                                    custom-height: 48px;
+                                    border-radius: 12px;
                                     text <=> root.setup_pass;
                                 }
 
                                 KinanaInput {
-                                    label: "تأكيد رمز المرور الرئيسي";
+                                    label: "تأكيد كلمة المرور:";
                                     placeholder: "أعد كتابة نفس الرمز للتأكيد...";
                                     password: true;
+                                    text-align: center;
+                                    custom-height: 48px;
+                                    border-radius: 12px;
                                     text <=> root.setup_confirm;
                                 }
 
                                 KinanaButton {
                                     text: "إنشاء الخزنة وبدء الاستخدام";
                                     variant: "primary";
+                                    custom-height: 48px;
+                                    border-radius: 12px;
+                                    custom-font-size: 15px;
                                     clicked => {
                                         root.try_create_vault(root.setup_pass, root.setup_confirm);
                                     }
@@ -324,8 +530,9 @@ export component MainWindow inherits Window {
                                 HorizontalLayout {
                                     alignment: center;
                                     KinanaButton {
-                                        text: "أو استيراد خزنة سابقة (.dat)";
+                                        text: "هل لديك نسخة سابقة من جهاز آخر؟ استيراد الخزنة (.dat)";
                                         variant: "ghost";
+                                        custom-font-size: 12px;
                                         clicked => {
                                             root.import_backup();
                                         }
@@ -338,7 +545,7 @@ export component MainWindow inherits Window {
             }
 
             // =========================================================================
-            // VIEW 2: UNLOCK VIEW
+            // VIEW 2: UNLOCK VIEW (Exact match to Screenshot 3)
             // =========================================================================
             if root.current_view == "unlock": Rectangle {
                 VerticalLayout {
@@ -347,71 +554,122 @@ export component MainWindow inherits Window {
                         alignment: center;
 
                         Rectangle {
-                            width: 420px;
-                            border-radius: 16px;
-                            background: Theme.surface;
+                            width: 430px;
+                            border-radius: 24px;
+                            background: #111319;
                             border-width: 1px;
-                            border-color: Theme.border;
+                            border-color: #202330;
 
                             VerticalLayout {
-                                padding: 32px;
+                                padding: 36px;
                                 spacing: 20px;
 
-                                Text {
-                                    text: "كِنانة";
-                                    color: Theme.text-primary;
-                                    font-size: 28px;
-                                    font-weight: 700;
-                                    horizontal-alignment: center;
+                                // Logo and Brand Title
+                                HorizontalLayout {
+                                    alignment: center;
+                                    spacing: 14px;
+
+                                    Image {
+                                        source: @image-url("assets/kinana-logo.png");
+                                        width: 52px;
+                                        height: 52px;
+                                        image-fit: contain;
+                                    }
+
+                                    Text {
+                                        text: "كِنانة";
+                                        color: #ffffff;
+                                        font-size: 32px;
+                                        font-weight: 800;
+                                        vertical-alignment: center;
+                                    }
                                 }
 
+                                // Subtitle
                                 Text {
-                                    text: "الخزنة مقفلة ومحمية. أدخل الرمز الرئيسي لفك التشفير.";
-                                    color: Theme.text-secondary;
+                                    text: "خزنة كلمات المرور الآمنة والمشفرة محلياً بالكامل";
+                                    color: #9ca3af;
                                     font-size: 13px;
+                                    font-weight: 500;
                                     horizontal-alignment: center;
                                 }
 
                                 if root.status_message != "": Text {
                                     text: root.status_message;
-                                    color: root.is_error_status ? Theme.danger : Theme.accent;
+                                    color: root.is_error_status ? #fca5a5 : #6ee7b7;
                                     font-size: 13px;
+                                    font-weight: 600;
                                     horizontal-alignment: center;
                                 }
 
+                                // Input Label
+                                Text {
+                                    text: "أدخل رمز الدخول أو كلمة المرور الرئيسية:";
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                }
+
+                                // Password Input
                                 KinanaInput {
-                                    label: "رمز المرور الرئيسي";
-                                    placeholder: "أدخل رمز المرور...";
+                                    placeholder: "••••••••••••";
                                     password: true;
+                                    text-align: center;
+                                    custom-height: 50px;
+                                    font-size: 18px;
+                                    border-radius: 14px;
                                     text <=> root.unlock_pass;
                                     accepted => {
                                         root.try_unlock(root.unlock_pass);
                                     }
                                 }
 
+                                // Primary Button (Solid White with Black Text)
                                 KinanaButton {
                                     text: "فتح الخزنة";
                                     variant: "primary";
+                                    custom-height: 48px;
+                                    border-radius: 14px;
+                                    custom-font-size: 16px;
                                     clicked => {
                                         root.try_unlock(root.unlock_pass);
                                     }
                                 }
 
+                                // Secondary Button (Dark Auto-Unlock)
                                 if root.has_saved_credentials: KinanaButton {
-                                    text: "فتح تلقائي عبر بيانات ويندوز";
+                                    text: "فتح تلقائياً بدون كلمة مرور";
                                     variant: "secondary";
+                                    custom-height: 46px;
+                                    border-radius: 14px;
+                                    custom-font-size: 14px;
                                     clicked => {
                                         root.try_quick_unlock();
                                     }
                                 }
 
-                                HorizontalLayout {
+                                // Footer Links
+                                VerticalLayout {
+                                    spacing: 8px;
+                                    padding-top: 8px;
                                     alignment: center;
+
                                     KinanaButton {
-                                        text: "استرداد الخزنة بمفتاح الطوارئ";
+                                        text: "نسيت كلمة المرور؟ استعادة الخزنة عبر مفتاح الطوارئ";
                                         variant: "ghost";
+                                        custom-font-size: 12px;
                                         clicked => {
                                             root.show_recovery_modal = true;
+                                        }
+                                    }
+
+                                    KinanaButton {
+                                        text: "استيراد أو تبديل الخزنة من ملف (.dat)";
+                                        variant: "ghost";
+                                        custom-font-size: 11px;
+                                        clicked => {
+                                            root.import_backup();
                                         }
                                     }
                                 }
@@ -422,228 +680,86 @@ export component MainWindow inherits Window {
             }
 
             // =========================================================================
-            // VIEW 3: DASHBOARD VIEW
+            // VIEW 3: DASHBOARD VIEW (Match Screenshot 4 Empty & Screenshot 5 Active)
             // =========================================================================
             if root.current_view == "dashboard": Rectangle {
-                VerticalLayout {
-                    padding-left: 24px;
-                    padding-right: 24px;
-                    padding-top: 16px;
-                    padding-bottom: 16px;
-                    spacing: 16px;
+                // Empty State (Exact match to Screenshot 4)
+                if root.services.length == 0: VerticalLayout {
+                    alignment: center;
+                    spacing: 22px;
 
-                    // Summary Stats & Category Filter Row
                     HorizontalLayout {
-                        alignment: space-between;
+                        alignment: center;
 
-                        // Categories filter pills
-                        HorizontalLayout {
-                            spacing: 8px;
-                            alignment: center;
-
-                            KinanaButton {
-                                text: "الكل";
-                                variant: root.selected_category == "الكل" ? "primary" : "secondary";
-                                custom-font-size: 12px;
-                                clicked => {
-                                    root.selected_category = "الكل";
-                                    root.filter_by_category("الكل");
-                                }
-                            }
-                            KinanaButton {
-                                text: "عام";
-                                variant: root.selected_category == "عام" ? "primary" : "secondary";
-                                custom-font-size: 12px;
-                                clicked => {
-                                    root.selected_category = "عام";
-                                    root.filter_by_category("عام");
-                                }
-                            }
-                            KinanaButton {
-                                text: "تواصل";
-                                variant: root.selected_category == "تواصل" ? "primary" : "secondary";
-                                custom-font-size: 12px;
-                                clicked => {
-                                    root.selected_category = "تواصل";
-                                    root.filter_by_category("تواصل");
-                                }
-                            }
-                            KinanaButton {
-                                text: "بنوك";
-                                variant: root.selected_category == "بنوك" ? "primary" : "secondary";
-                                custom-font-size: 12px;
-                                clicked => {
-                                    root.selected_category = "بنوك";
-                                    root.filter_by_category("بنوك");
-                                }
-                            }
-                            KinanaButton {
-                                text: "عمل";
-                                variant: root.selected_category == "عمل" ? "primary" : "secondary";
-                                custom-font-size: 12px;
-                                clicked => {
-                                    root.selected_category = "عمل";
-                                    root.filter_by_category("عمل");
-                                }
-                            }
-                        }
-
-                        // Stats counters
-                        HorizontalLayout {
-                            spacing: 16px;
-                            alignment: center;
+                        Rectangle {
+                            width: 110px;
+                            height: 110px;
+                            border-radius: 24px;
+                            background: add-box-touch.has-hover ? #191c28 : #12141c;
+                            border-width: 2px;
+                            border-color: add-box-touch.has-hover ? #3b82f6 : #2a2e40;
 
                             Text {
-                                text: "عدد الخدمات: " + root.services.length;
-                                color: Theme.text-secondary;
-                                font-size: 13px;
-                                font-weight: 600;
+                                text: "+";
+                                color: add-box-touch.has-hover ? #3b82f6 : #8e95a5;
+                                font-size: 48px;
+                                font-weight: 300;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
                             }
 
-                            Text {
-                                text: "عدد الحسابات: " + root.total_accounts_count;
-                                color: Theme.text-secondary;
-                                font-size: 13px;
-                                font-weight: 600;
+                            add-box-touch := TouchArea {
+                                clicked => {
+                                    root.new_service_name = "";
+                                    root.new_service_category = "عام";
+                                    root.new_service_username = "";
+                                    root.new_service_password = "";
+                                    root.new_service_email = "";
+                                    root.new_service_recovery = "";
+                                    root.new_service_notes = "";
+                                    root.new_service_url = "";
+                                    root.new_service_icon_path = "";
+                                    root.new_service_has_custom_icon = false;
+                                    root.request_generate_password();
+                                    root.show_add_service_modal = true;
+                                }
+                                mouse-cursor: pointer;
                             }
                         }
                     }
 
-                    // Services List
-                    ScrollView {
-                        VerticalLayout {
-                            spacing: 10px;
-                            padding-bottom: 20px;
+                    Text {
+                        text: "لا توجد خدمات مضافة حتى الآن";
+                        color: #ffffff;
+                        font-family: Theme.font-family;
+                        font-size: 22px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                    }
+                }
 
-                            if root.services.length == 0: Rectangle {
-                                height: 200px;
-                                VerticalLayout {
-                                    alignment: center;
-                                    spacing: 10px;
+                // Populated State (Netflix Grid matching Screenshot 5)
+                if root.services.length > 0: ScrollView {
+                    VerticalLayout {
+                        padding: 32px;
+                        spacing: 24px;
+                        alignment: start;
 
-                                    Text {
-                                        text: "لا توجد خدمات مسجلة تطابق البحث";
-                                        color: Theme.text-muted;
-                                        font-size: 16px;
-                                        horizontal-alignment: center;
-                                    }
+                        HorizontalLayout {
+                            alignment: end;
+                            spacing: 24px;
 
-                                    KinanaButton {
-                                        text: "إضافة أول خدمة الآن";
-                                        variant: "primary";
-                                        clicked => {
-                                            root.show_add_service_modal = true;
-                                        }
-                                    }
-                                }
-                            }
-
-                            for service in root.services: Rectangle {
-                                height: 72px;
-                                border-radius: 10px;
-                                background: card-touch.has-hover ? Theme.surface-hover : Theme.surface-card;
-                                border-width: 1px;
-                                border-color: card-touch.has-hover ? Theme.border-focus : Theme.border;
-
-                                animate background { duration: 150ms; }
-                                animate border-color { duration: 150ms; }
-
-                                HorizontalLayout {
-                                    padding-left: 16px;
-                                    padding-right: 16px;
-                                    alignment: space-between;
-
-                                    // Left: Actions
-                                    HorizontalLayout {
-                                        spacing: 10px;
-                                        alignment: center;
-
-                                        KinanaButton {
-                                            text: "نسخ الرمز";
-                                            variant: "secondary";
-                                            custom-font-size: 12px;
-                                            clicked => {
-                                                root.copy_service_password(service.id);
-                                            }
-                                        }
-
-                                        KinanaButton {
-                                            text: "التفاصيل";
-                                            variant: "ghost";
-                                            custom-font-size: 12px;
-                                            clicked => {
-                                                root.open_service_details(service.id, service.name, service.category);
-                                            }
-                                        }
-                                    }
-
-                                    // Right: Service Info & Avatar
-                                    HorizontalLayout {
-                                        spacing: 14px;
-                                        alignment: center;
-
-                                        VerticalLayout {
-                                            alignment: center;
-                                            spacing: 4px;
-
-                                            Text {
-                                                text: service.name;
-                                                color: Theme.text-primary;
-                                                font-size: 16px;
-                                                font-weight: 700;
-                                                horizontal-alignment: right;
-                                            }
-
-                                            HorizontalLayout {
-                                                spacing: 8px;
-                                                alignment: end;
-
-                                                Text {
-                                                    text: service.category;
-                                                    color: Theme.text-muted;
-                                                    font-size: 12px;
-                                                }
-
-                                                Text {
-                                                    text: "•";
-                                                    color: Theme.border;
-                                                    font-size: 12px;
-                                                }
-
-                                                Text {
-                                                    text: service.accounts_count <= 1 ? (service.accounts_count == 1 ? "حساب واحد" : "بدون حساب") : (service.accounts_count + " حسابات");
-                                                    color: Theme.text-secondary;
-                                                    font-size: 12px;
-                                                }
-                                            }
-                                        }
-
-                                        // Badge Avatar
-                                        Rectangle {
-                                            width: 42px;
-                                            height: 42px;
-                                            border-radius: 10px;
-                                            background: service.badge_color.transparentize(0.85);
-                                            border-width: 1px;
-                                            border-color: service.badge_color.transparentize(0.5);
-
-                                            Text {
-                                                text: service.initial;
-                                                color: service.badge_color;
-                                                font-size: 18px;
-                                                font-weight: 700;
-                                                horizontal-alignment: center;
-                                                vertical-alignment: center;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                card-touch := TouchArea {
-                                    clicked => {
-                                        root.open_service_details(service.id, service.name, service.category);
-                                    }
-                                    mouse-cursor: pointer;
+                            for service in root.services: ServiceCard {
+                                id: service.id;
+                                name: service.name;
+                                initial: service.initial;
+                                brand-color: service.badge_color;
+                                accounts-count: service.accounts_count;
+                                category: service.category;
+                                has-cover: service.has_cover;
+                                cover-image: service.cover_image;
+                                clicked => {
+                                    root.open_service_details(service.id, service.name, service.category);
                                 }
                             }
                         }
@@ -653,106 +769,199 @@ export component MainWindow inherits Window {
         }
 
         // =========================================================================
-        // MODAL 1: ADD SERVICE MODAL
+        // TOAST NOTIFICATION
+        // =========================================================================
+        if root.show_toast: Rectangle {
+            x: (parent.width - 320px) / 2;
+            y: 76px;
+            width: 320px;
+            height: 44px;
+            border-radius: 12px;
+            background: #1e293b;
+            border-width: 1px;
+            border-color: #3b82f6;
+
+            HorizontalLayout {
+                padding-left: 14px;
+                padding-right: 14px;
+                alignment: center;
+
+                Text {
+                    text: root.toast_text;
+                    color: #ffffff;
+                    font-family: Theme.font-family;
+                    font-size: 13px;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        // =========================================================================
+        // MODAL 1: ADD SERVICE MODAL (Scrollable, Image Picker, Pinned Buttons)
         // =========================================================================
         if root.show_add_service_modal: KinanaModal {
             title: "إضافة خدمة جديدة";
-            modal-width: 500px;
-            modal-height: 580px;
+            modal-width: 520px;
+            modal-max-height: 640px;
             close => { root.show_add_service_modal = false; }
 
-            ScrollView {
-                VerticalLayout {
-                    spacing: 14px;
-                    padding-bottom: 10px;
+            VerticalLayout {
+                spacing: 14px;
 
-                    KinanaInput {
-                        label: "اسم الخدمة";
-                        placeholder: "مثال: Google, الراجحي, Twitter...";
-                        text <=> root.new_service_name;
-                    }
+                ScrollView {
+                    height: 480px;
 
-                    KinanaInput {
-                        label: "التصنيف";
-                        placeholder: "عام، تواصل، بنوك، عمل، تسوق...";
-                        text <=> root.new_service_category;
-                    }
+                    VerticalLayout {
+                        spacing: 12px;
+                        padding-left: 4px;
+                        padding-right: 4px;
+                        padding-bottom: 12px;
 
-                    KinanaInput {
-                        label: "اسم المستخدم / المعرف";
-                        placeholder: "اسم الحساب أو الإيميل...";
-                        text <=> root.new_service_username;
-                    }
-
-                    HorizontalLayout {
-                        spacing: 8px;
                         KinanaInput {
-                            label: "كلمة المرور";
-                            placeholder: "أدخل الرمز أو ولّده...";
-                            text <=> root.new_service_password;
+                            label: "اسم الخدمة أو الموقع";
+                            placeholder: "مثال: أبشر، الراجحي، Gmail...";
+                            text <=> root.new_service_name;
                         }
+
+                        // Cover Image Picker
                         VerticalLayout {
-                            alignment: end;
-                            KinanaButton {
-                                text: "توليد";
+                            spacing: 6px;
+
+                            Text {
+                                text: "غلاف أو صورة الخدمة:";
+                                color: Theme.text-secondary;
+                                font-family: Theme.font-family;
+                                font-size: 13px;
+                                font-weight: 600;
+                                horizontal-alignment: right;
+                            }
+
+                            if root.new_service_has_custom_icon: HorizontalLayout {
+                                spacing: 12px;
+                                alignment: center;
+
+                                Rectangle {
+                                    width: 140px;
+                                    height: 80px;
+                                    border-radius: 10px;
+                                    background: #161822;
+                                    border-width: 1px;
+                                    border-color: #3b82f6;
+
+                                    Image {
+                                        source: root.new_service_preview_icon;
+                                        width: 100%;
+                                        height: 100%;
+                                        image-fit: contain;
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    KinanaButton {
+                                        text: "إزالة الغلاف";
+                                        variant: "danger";
+                                        custom-font-size: 12px;
+                                        custom-height: 36px;
+                                        clicked => {
+                                            root.remove_service_cover();
+                                        }
+                                    }
+                                }
+                            }
+
+                            if !root.new_service_has_custom_icon: KinanaButton {
+                                text: "اختر صورة مخصصة من جهازك (PNG, JPG, SVG...)";
                                 variant: "secondary";
+                                custom-font-size: 13px;
+                                custom-height: 42px;
                                 clicked => {
-                                    root.new_service_password = root.gen_password;
+                                    root.pick_service_cover();
                                 }
                             }
                         }
-                    }
 
-                    KinanaInput {
-                        label: "البريد الإلكتروني (اختياري)";
-                        placeholder: "user@example.com";
-                        text <=> root.new_service_email;
-                    }
-
-                    KinanaInput {
-                        label: "مفتاح استرداد الحساب (اختياري)";
-                        placeholder: "Backup code / Recovery Key...";
-                        text <=> root.new_service_recovery;
-                    }
-
-                    KinanaInput {
-                        label: "ملاحظات إضافية (اختياري)";
-                        placeholder: "أي معلومات أو تفاصيل مهمة...";
-                        text <=> root.new_service_notes;
-                    }
-
-                    KinanaInput {
-                        label: "رابط الموقع (اختياري)";
-                        placeholder: "https://...";
-                        text <=> root.new_service_url;
-                    }
-
-                    HorizontalLayout {
-                        spacing: 10px;
-                        alignment: end;
-
-                        KinanaButton {
-                            text: "إلغاء";
-                            variant: "ghost";
-                            clicked => { root.show_add_service_modal = false; }
+                        KinanaInput {
+                            label: "اسم المستخدم / المعرف";
+                            placeholder: "اسم الحساب أو الإيميل...";
+                            text <=> root.new_service_username;
                         }
 
-                        KinanaButton {
-                            text: "حفظ الخدمة";
-                            variant: "primary";
-                            clicked => {
-                                root.add_service(
-                                    root.new_service_name,
-                                    root.new_service_category,
-                                    root.new_service_username,
-                                    root.new_service_password,
-                                    root.new_service_email,
-                                    root.new_service_recovery,
-                                    root.new_service_notes,
-                                    root.new_service_url
-                                );
-                                root.show_add_service_modal = false;
+                        HorizontalLayout {
+                            spacing: 8px;
+                            KinanaInput {
+                                label: "كلمة المرور";
+                                placeholder: "أدخل الرمز أو ولّده...";
+                                text <=> root.new_service_password;
                             }
+                            VerticalLayout {
+                                alignment: end;
+                                KinanaButton {
+                                    text: "توليد";
+                                    variant: "secondary";
+                                    custom-height: 44px;
+                                    clicked => {
+                                        root.request_generate_password();
+                                        root.new_service_password = root.gen_password;
+                                    }
+                                }
+                            }
+                        }
+
+                        KinanaInput {
+                            label: "البريد الإلكتروني (اختياري)";
+                            placeholder: "user@example.com";
+                            text <=> root.new_service_email;
+                        }
+
+                        KinanaInput {
+                            label: "مفتاح استرداد الحساب (اختياري)";
+                            placeholder: "Backup code / Recovery Key...";
+                            text <=> root.new_service_recovery;
+                        }
+
+                        KinanaInput {
+                            label: "ملاحظات إضافية (اختياري)";
+                            placeholder: "أي معلومات أو تفاصيل مهمة...";
+                            text <=> root.new_service_notes;
+                        }
+
+                        KinanaInput {
+                            label: "رابط الموقع (اختياري)";
+                            placeholder: "https://...";
+                            text <=> root.new_service_url;
+                        }
+                    }
+                }
+
+                // Pinned Action Buttons (Always visible at bottom!)
+                HorizontalLayout {
+                    spacing: 10px;
+                    alignment: end;
+
+                    KinanaButton {
+                        text: "إلغاء";
+                        variant: "ghost";
+                        clicked => { root.show_add_service_modal = false; }
+                    }
+
+                    KinanaButton {
+                        text: "حفظ الخدمة";
+                        variant: "primary";
+                        clicked => {
+                            root.add_service(
+                                root.new_service_name,
+                                root.new_service_category,
+                                root.new_service_username,
+                                root.new_service_password,
+                                root.new_service_email,
+                                root.new_service_recovery,
+                                root.new_service_notes,
+                                root.new_service_url,
+                                root.new_service_icon_path
+                            );
+                            root.show_add_service_modal = false;
                         }
                     }
                 }
@@ -764,14 +973,13 @@ export component MainWindow inherits Window {
         // =========================================================================
         if root.show_details_modal: KinanaModal {
             title: root.active_service_name;
-            modal-width: 640px;
-            modal-height: 560px;
+            modal-width: 620px;
+            modal-max-height: 640px;
             close => { root.show_details_modal = false; }
 
             VerticalLayout {
-                spacing: 16px;
+                spacing: 14px;
 
-                // Service Controls Row
                 HorizontalLayout {
                     alignment: space-between;
 
@@ -782,6 +990,7 @@ export component MainWindow inherits Window {
                             text: "تكرار";
                             variant: "secondary";
                             custom-font-size: 12px;
+                            custom-height: 36px;
                             clicked => {
                                 root.duplicate_service(root.active_service_id);
                                 root.show_details_modal = false;
@@ -792,6 +1001,7 @@ export component MainWindow inherits Window {
                             text: "حذف الخدمة";
                             variant: "danger";
                             custom-font-size: 12px;
+                            custom-height: 36px;
                             clicked => {
                                 root.delete_service(root.active_service_id);
                                 root.show_details_modal = false;
@@ -803,6 +1013,7 @@ export component MainWindow inherits Window {
                         text: "+ إضافة حساب";
                         variant: "primary";
                         custom-font-size: 12px;
+                        custom-height: 36px;
                         clicked => {
                             root.new_acc_label = "";
                             root.new_acc_username = "";
@@ -816,8 +1027,9 @@ export component MainWindow inherits Window {
                     }
                 }
 
-                // Accounts List
                 ScrollView {
+                    height: 460px;
+
                     VerticalLayout {
                         spacing: 12px;
                         padding-bottom: 10px;
@@ -830,16 +1042,15 @@ export component MainWindow inherits Window {
                         }
 
                         for acc in root.current_accounts: Rectangle {
-                            border-radius: 10px;
-                            background: Theme.surface-card;
+                            border-radius: 12px;
+                            background: #141720;
                             border-width: 1px;
-                            border-color: Theme.border;
+                            border-color: #242738;
 
                             VerticalLayout {
                                 padding: 16px;
                                 spacing: 10px;
 
-                                // Header row: Label & Delete
                                 HorizontalLayout {
                                     alignment: space-between;
 
@@ -853,97 +1064,94 @@ export component MainWindow inherits Window {
                                     }
 
                                     Text {
-                                        text: acc.label;
-                                        color: Theme.accent;
-                                        font-size: 13px;
+                                        text: acc.label != "" ? acc.label : "حساب";
+                                        color: #ffffff;
+                                        font-size: 15px;
                                         font-weight: 700;
+                                        vertical-alignment: center;
                                     }
                                 }
 
-                                // Username field
                                 if acc.username != "": HorizontalLayout {
                                     alignment: space-between;
                                     KinanaButton {
                                         text: "نسخ";
-                                        variant: "secondary";
+                                        variant: "ghost";
                                         custom-font-size: 11px;
-                                        clicked => { root.copy_secure_text(acc.username); }
+                                        clicked => { root.copy_to_clipboard(acc.username); }
                                     }
-                                    HorizontalLayout {
-                                        spacing: 8px;
-                                        Text { text: acc.username; color: Theme.text-primary; font-size: 13px; }
-                                        Text { text: "اسم المستخدم:"; color: Theme.text-muted; font-size: 13px; }
+                                    Text {
+                                        text: "اسم المستخدم: " + acc.username;
+                                        color: #cbd5e1;
+                                        font-size: 13px;
                                     }
                                 }
 
-                                // Password field
                                 if acc.has_password: HorizontalLayout {
                                     alignment: space-between;
                                     KinanaButton {
                                         text: "نسخ الرمز";
                                         variant: "primary";
                                         custom-font-size: 11px;
+                                        custom-height: 32px;
                                         clicked => {
                                             root.copy_account_password(root.active_service_id, acc.id);
                                         }
                                     }
-                                    HorizontalLayout {
-                                        spacing: 8px;
-                                        Text { text: "••••••••••••"; color: Theme.text-primary; font-size: 14px; }
-                                        Text { text: "كلمة المرور:"; color: Theme.text-muted; font-size: 13px; }
+                                    Text {
+                                        text: "كلمة المرور: ••••••••••••";
+                                        color: #cbd5e1;
+                                        font-size: 13px;
+                                        vertical-alignment: center;
                                     }
                                 }
 
-                                // Email field
                                 if acc.email != "": HorizontalLayout {
                                     alignment: space-between;
                                     KinanaButton {
                                         text: "نسخ";
-                                        variant: "secondary";
+                                        variant: "ghost";
                                         custom-font-size: 11px;
-                                        clicked => { root.copy_secure_text(acc.email); }
+                                        clicked => { root.copy_to_clipboard(acc.email); }
                                     }
-                                    HorizontalLayout {
-                                        spacing: 8px;
-                                        Text { text: acc.email; color: Theme.text-primary; font-size: 13px; }
-                                        Text { text: "البريد:"; color: Theme.text-muted; font-size: 13px; }
+                                    Text {
+                                        text: "البريد: " + acc.email;
+                                        color: #94a3b8;
+                                        font-size: 12px;
                                     }
                                 }
 
-                                // Recovery Key field
                                 if acc.recovery_key != "": HorizontalLayout {
                                     alignment: space-between;
                                     KinanaButton {
                                         text: "نسخ";
-                                        variant: "secondary";
+                                        variant: "ghost";
                                         custom-font-size: 11px;
-                                        clicked => { root.copy_secure_text(acc.recovery_key); }
+                                        clicked => { root.copy_to_clipboard(acc.recovery_key); }
                                     }
-                                    HorizontalLayout {
-                                        spacing: 8px;
-                                        Text { text: acc.recovery_key; color: Theme.warning; font-size: 12px; }
-                                        Text { text: "مفتاح الاسترداد:"; color: Theme.text-muted; font-size: 13px; }
+                                    Text {
+                                        text: "مفتاح الاسترداد: " + acc.recovery_key;
+                                        color: #f59e0b;
+                                        font-size: 12px;
                                     }
                                 }
 
-                                // Notes
-                                if acc.notes != "": HorizontalLayout {
-                                    alignment: end;
-                                    spacing: 8px;
-                                    Text { text: acc.notes; color: Theme.text-secondary; font-size: 12px; wrap: word-wrap; }
-                                    Text { text: "ملاحظات:"; color: Theme.text-muted; font-size: 13px; }
+                                if acc.notes != "": Text {
+                                    text: "ملاحظات: " + acc.notes;
+                                    color: #94a3b8;
+                                    font-size: 12px;
+                                    wrap: word-wrap;
+                                    horizontal-alignment: right;
                                 }
 
-                                // URL
                                 if acc.url != "": HorizontalLayout {
-                                    alignment: space-between;
+                                    alignment: end;
                                     KinanaButton {
                                         text: "فتح الرابط";
                                         variant: "ghost";
                                         custom-font-size: 11px;
                                         clicked => { root.open_external_url(acc.url); }
                                     }
-                                    Text { text: acc.url; color: Theme.info; font-size: 12px; }
                                 }
                             }
                         }
@@ -956,284 +1164,107 @@ export component MainWindow inherits Window {
         // MODAL 3: ADD ACCOUNT TO SERVICE
         // =========================================================================
         if root.show_add_account_modal: KinanaModal {
-            title: "إضافة حساب إلى " + root.active_service_name;
-            modal-width: 460px;
-            modal-height: 520px;
+            title: "إضافة حساب إلى: " + root.active_service_name;
+            modal-width: 480px;
+            modal-max-height: 600px;
             close => { root.show_add_account_modal = false; }
 
-            ScrollView {
-                VerticalLayout {
-                    spacing: 12px;
-                    padding-bottom: 10px;
-
-                    KinanaInput {
-                        label: "وصف الحساب";
-                        placeholder: "مثال: الحساب الشخصي، حساب العمل...";
-                        text <=> root.new_acc_label;
-                    }
-
-                    KinanaInput {
-                        label: "اسم المستخدم / المعرف";
-                        placeholder: "user123";
-                        text <=> root.new_acc_username;
-                    }
-
-                    KinanaInput {
-                        label: "كلمة المرور";
-                        placeholder: "الرمز السري...";
-                        text <=> root.new_acc_password;
-                    }
-
-                    KinanaInput {
-                        label: "البريد الإلكتروني";
-                        placeholder: "email@example.com";
-                        text <=> root.new_acc_email;
-                    }
-
-                    KinanaInput {
-                        label: "مفتاح الاسترداد";
-                        placeholder: "Recovery code...";
-                        text <=> root.new_acc_recovery;
-                    }
-
-                    KinanaInput {
-                        label: "ملاحظات";
-                        placeholder: "تفاصيل...";
-                        text <=> root.new_acc_notes;
-                    }
-
-                    HorizontalLayout {
-                        spacing: 10px;
-                        alignment: end;
-
-                        KinanaButton {
-                            text: "إلغاء";
-                            variant: "ghost";
-                            clicked => { root.show_add_account_modal = false; }
-                        }
-
-                        KinanaButton {
-                            text: "إضافة";
-                            variant: "primary";
-                            clicked => {
-                                root.add_account(
-                                    root.active_service_id,
-                                    root.new_acc_label,
-                                    root.new_acc_username,
-                                    root.new_acc_password,
-                                    root.new_acc_email,
-                                    root.new_acc_recovery,
-                                    root.new_acc_notes,
-                                    root.new_acc_url
-                                );
-                                root.show_add_account_modal = false;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // =========================================================================
-        // MODAL 4: PASSWORD GENERATOR
-        // =========================================================================
-        if root.show_generator_modal: KinanaModal {
-            title: "مولد كلمات المرور الآمن";
-            modal-width: 480px;
-            modal-height: 420px;
-            close => { root.show_generator_modal = false; }
-
             VerticalLayout {
-                spacing: 16px;
+                spacing: 12px;
 
-                // Generated Password Box
-                Rectangle {
-                    height: 54px;
-                    border-radius: 10px;
-                    background: #171f2e;
-                    border-width: 1px;
-                    border-color: Theme.border-focus;
+                ScrollView {
+                    height: 420px;
 
-                    HorizontalLayout {
-                        padding-left: 14px;
-                        padding-right: 14px;
-                        alignment: space-between;
+                    VerticalLayout {
+                        spacing: 12px;
+                        padding-left: 4px;
+                        padding-right: 4px;
+                        padding-bottom: 12px;
 
-                        KinanaButton {
-                            text: "نسخ";
-                            variant: "primary";
-                            custom-font-size: 12px;
-                            clicked => {
-                                root.copy_secure_text(root.gen_password);
-                            }
+                        KinanaInput {
+                            label: "تسمية الحساب";
+                            placeholder: "مثال: الحساب الشخصي، العمل...";
+                            text <=> root.new_acc_label;
                         }
 
-                        Text {
-                            text: root.gen_password;
-                            color: #38bdf8;
-                            font-size: 16px;
-                            font-weight: 700;
-                            vertical-alignment: center;
+                        KinanaInput {
+                            label: "اسم المستخدم / المعرف";
+                            placeholder: "اسم الحساب أو الإيميل...";
+                            text <=> root.new_acc_username;
                         }
-                    }
-                }
-
-                // Length control
-                HorizontalLayout {
-                    alignment: space-between;
-                    Text { text: root.gen_length + " حرف"; color: Theme.accent; font-size: 14px; font-weight: 700; }
-                    Text { text: "طول كلمة المرور:"; color: Theme.text-secondary; font-size: 13px; }
-                }
-
-                Slider {
-                    minimum: 8;
-                    maximum: 32;
-                    value: root.gen_length;
-                    changed(val) => {
-                        root.gen_length = Math.round(val);
-                        root.request_generate_password(root.gen_length, root.gen_use_symbols, root.gen_use_numbers, root.gen_use_uppercase);
-                    }
-                }
-
-                // Checkboxes
-                HorizontalLayout {
-                    alignment: space-between;
-
-                    CheckBox {
-                        text: "رموز خاصة (!@#$)";
-                        checked: root.gen_use_symbols;
-                        toggled => {
-                            root.gen_use_symbols = self.checked;
-                            root.request_generate_password(root.gen_length, root.gen_use_symbols, root.gen_use_numbers, root.gen_use_uppercase);
-                        }
-                    }
-
-                    CheckBox {
-                        text: "أرقام (0-9)";
-                        checked: root.gen_use_numbers;
-                        toggled => {
-                            root.gen_use_numbers = self.checked;
-                            root.request_generate_password(root.gen_length, root.gen_use_symbols, root.gen_use_numbers, root.gen_use_uppercase);
-                        }
-                    }
-
-                    CheckBox {
-                        text: "حروف كبيرة (A-Z)";
-                        checked: root.gen_use_uppercase;
-                        toggled => {
-                            root.gen_use_uppercase = self.checked;
-                            root.request_generate_password(root.gen_length, root.gen_use_symbols, root.gen_use_numbers, root.gen_use_uppercase);
-                        }
-                    }
-                }
-
-                KinanaButton {
-                    text: "توليد كلمة مرور أخرى";
-                    variant: "secondary";
-                    clicked => {
-                        root.request_generate_password(root.gen_length, root.gen_use_symbols, root.gen_use_numbers, root.gen_use_uppercase);
-                    }
-                }
-            }
-        }
-
-        // =========================================================================
-        // MODAL 5: SETTINGS MODAL
-        // =========================================================================
-        if root.show_settings_modal: KinanaModal {
-            title: "إعدادات كِنانة والأمان";
-            modal-width: 520px;
-            modal-height: 560px;
-            close => { root.show_settings_modal = false; }
-
-            ScrollView {
-                VerticalLayout {
-                    spacing: 18px;
-                    padding-bottom: 10px;
-
-                    // Section: Backup
-                    Text { text: "النسخ الاحتياطي والنقل"; color: Theme.text-primary; font-size: 15px; font-weight: 700; horizontal-alignment: right; }
-
-                    HorizontalLayout {
-                        spacing: 10px;
-                        KinanaButton {
-                            text: "تصدير نسخة مشفرة (.dat)";
-                            variant: "secondary";
-                            clicked => { root.export_backup(); }
-                        }
-                        KinanaButton {
-                            text: "استيراد نسخة مشفرة (.dat)";
-                            variant: "secondary";
-                            clicked => { root.import_backup(); }
-                        }
-                    }
-
-                    Rectangle { height: 1px; background: Theme.border; }
-
-                    // Section: Emergency Recovery
-                    Text { text: "مفتاح الطوارئ للاسترداد"; color: Theme.text-primary; font-size: 15px; font-weight: 700; horizontal-alignment: right; }
-                    Text { text: "احفظ هذا المفتاح في مكان آمن للتمكن من استعادة بياناتك في حال نسيت الرمز الرئيسي."; color: Theme.text-muted; font-size: 12px; wrap: word-wrap; horizontal-alignment: right; }
-
-                    Rectangle {
-                        height: 44px;
-                        border-radius: 8px;
-                        background: Theme.surface-card;
-                        border-width: 1px;
-                        border-color: Theme.border;
 
                         HorizontalLayout {
-                            padding-left: 12px;
-                            padding-right: 12px;
-                            alignment: space-between;
-
-                            KinanaButton {
-                                text: "نسخ";
-                                variant: "primary";
-                                custom-font-size: 11px;
-                                clicked => { root.copy_secure_text(root.emergency_key_display); }
+                            spacing: 8px;
+                            KinanaInput {
+                                label: "كلمة المرور";
+                                placeholder: "أدخل الرمز أو ولّده...";
+                                text <=> root.new_acc_password;
                             }
-
-                            Text {
-                                text: root.emergency_key_display;
-                                color: Theme.warning;
-                                font-size: 13px;
-                                font-weight: 700;
-                                vertical-alignment: center;
+                            VerticalLayout {
+                                alignment: end;
+                                KinanaButton {
+                                    text: "توليد";
+                                    variant: "secondary";
+                                    custom-height: 44px;
+                                    clicked => {
+                                        root.request_generate_password();
+                                        root.new_acc_password = root.gen_password;
+                                    }
+                                }
                             }
                         }
+
+                        KinanaInput {
+                            label: "البريد الإلكتروني (اختياري)";
+                            placeholder: "user@example.com";
+                            text <=> root.new_acc_email;
+                        }
+
+                        KinanaInput {
+                            label: "مفتاح استرداد الحساب (اختياري)";
+                            placeholder: "Backup code...";
+                            text <=> root.new_acc_recovery;
+                        }
+
+                        KinanaInput {
+                            label: "ملاحظات إضافية (اختياري)";
+                            placeholder: "ملاحظات خاصة بهذا الحساب...";
+                            text <=> root.new_acc_notes;
+                        }
+
+                        KinanaInput {
+                            label: "رابط الموقع (اختياري)";
+                            placeholder: "https://...";
+                            text <=> root.new_acc_url;
+                        }
                     }
+                }
 
-                    Rectangle { height: 1px; background: Theme.border; }
+                HorizontalLayout {
+                    spacing: 10px;
+                    alignment: end;
 
-                    // Section: Change Password
-                    Text { text: "تغيير رمز المرور الرئيسي"; color: Theme.text-primary; font-size: 15px; font-weight: 700; horizontal-alignment: right; }
-
-                    KinanaInput {
-                        label: "رمز المرور الحالي";
-                        placeholder: "الرمز القديم...";
-                        password: true;
-                        text <=> root.change_old_pass;
-                    }
-
-                    KinanaInput {
-                        label: "رمز المرور الجديد";
-                        placeholder: "الرمز الجديد...";
-                        password: true;
-                        text <=> root.change_new_pass;
-                    }
-
-                    KinanaInput {
-                        label: "تأكيد الرمز الجديد";
-                        placeholder: "أعد كتابة الرمز الجديد...";
-                        password: true;
-                        text <=> root.change_confirm_pass;
+                    KinanaButton {
+                        text: "إلغاء";
+                        variant: "ghost";
+                        clicked => { root.show_add_account_modal = false; }
                     }
 
                     KinanaButton {
-                        text: "تحديث رمز المرور الرئيسي";
+                        text: "حفظ الحساب";
                         variant: "primary";
                         clicked => {
-                            root.change_master_password(root.change_old_pass, root.change_new_pass, root.change_confirm_pass);
+                            root.add_account(
+                                root.active_service_id,
+                                root.new_acc_label,
+                                root.new_acc_username,
+                                root.new_acc_password,
+                                root.new_acc_email,
+                                root.new_acc_recovery,
+                                root.new_acc_notes,
+                                root.new_acc_url
+                            );
+                            root.show_add_account_modal = false;
                         }
                     }
                 }
@@ -1241,69 +1272,178 @@ export component MainWindow inherits Window {
         }
 
         // =========================================================================
-        // MODAL 6: RECOVERY MODAL
+        // MODAL 4: SETTINGS & BACKUP & SECURITY
+        // =========================================================================
+        if root.show_settings_modal: KinanaModal {
+            title: "إعدادات الأمان واستعادة الخزنة";
+            modal-width: 540px;
+            modal-max-height: 640px;
+            close => { root.show_settings_modal = false; }
+
+            ScrollView {
+                height: 520px;
+
+                VerticalLayout {
+                    spacing: 18px;
+                    padding-left: 4px;
+                    padding-right: 4px;
+
+                    // Emergency Recovery Key Box
+                    Rectangle {
+                        border-radius: 12px;
+                        background: #141722;
+                        border-width: 1px;
+                        border-color: #f59e0b.transparentize(0.5);
+
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 8px;
+
+                            Text {
+                                text: "مفتاح الطوارئ لاستعادة الخزنة:";
+                                color: #f59e0b;
+                                font-size: 13px;
+                                font-weight: 700;
+                                horizontal-alignment: right;
+                            }
+
+                            Text {
+                                text: root.emergency_key_display != "" ? root.emergency_key_display : "جاري التوليد...";
+                                color: #ffffff;
+                                font-size: 14px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                            }
+
+                            HorizontalLayout {
+                                alignment: center;
+                                KinanaButton {
+                                    text: "نسخ مفتاح الطوارئ";
+                                    variant: "secondary";
+                                    custom-font-size: 12px;
+                                    custom-height: 34px;
+                                    clicked => {
+                                        root.copy_to_clipboard(root.emergency_key_display);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Master Password Change
+                    VerticalLayout {
+                        spacing: 10px;
+
+                        Text {
+                            text: "تغيير كلمة المرور الرئيسية:";
+                            color: #ffffff;
+                            font-size: 14px;
+                            font-weight: 700;
+                            horizontal-alignment: right;
+                        }
+
+                        KinanaInput {
+                            label: "كلمة المرور الحالية";
+                            placeholder: "أدخل الرمز الحالي...";
+                            password: true;
+                            text <=> root.change_old_pass;
+                        }
+
+                        KinanaInput {
+                            label: "كلمة المرور الجديدة";
+                            placeholder: "أدخل الرمز الجديد...";
+                            password: true;
+                            text <=> root.change_new_pass;
+                        }
+
+                        KinanaInput {
+                            label: "تأكيد كلمة المرور الجديدة";
+                            placeholder: "أعد كتابة الرمز الجديد...";
+                            password: true;
+                            text <=> root.change_confirm_pass;
+                        }
+
+                        HorizontalLayout {
+                            alignment: end;
+                            KinanaButton {
+                                text: "تحديث كلمة المرور";
+                                variant: "primary";
+                                clicked => {
+                                    root.change_master_password(
+                                        root.change_old_pass,
+                                        root.change_new_pass,
+                                        root.change_confirm_pass
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // =========================================================================
+        // MODAL 5: EMERGENCY RECOVERY MODAL
         // =========================================================================
         if root.show_recovery_modal: KinanaModal {
-            title: "استرداد الخزنة بمفتاح الطوارئ";
-            modal-width: 460px;
-            modal-height: 400px;
+            title: "استعادة الخزنة عبر مفتاح الطوارئ";
+            modal-width: 480px;
+            modal-max-height: 480px;
             close => { root.show_recovery_modal = false; }
 
             VerticalLayout {
                 spacing: 16px;
 
                 Text {
-                    text: "أدخل مفتاح الاسترداد ورمز مرور رئيسي جديد لاستعادة الخزنة.";
-                    color: Theme.text-secondary;
+                    text: "إذا نسيت كلمة المرور الرئيسية، أدخل مفتاح الطوارئ المكون من 32 حرفاً لتعيين كلمة مرور جديدة:";
+                    color: #94a3b8;
                     font-size: 13px;
                     wrap: word-wrap;
-                    horizontal-alignment: center;
+                    horizontal-alignment: right;
                 }
 
                 KinanaInput {
-                    label: "مفتاح الاسترداد (Recovery Key)";
-                    placeholder: "KINANA-XXXX-XXXX-XXXX";
+                    label: "مفتاح الطوارئ (32 رمز)";
+                    placeholder: "ألصق مفتاح الطوارئ هنا...";
                     text <=> root.recovery_input_key;
                 }
 
                 KinanaInput {
-                    label: "رمز المرور الجديد";
-                    placeholder: "رمز المرور الجديد...";
+                    label: "كلمة المرور الرئيسية الجديدة";
+                    placeholder: "أدخل الرمز الجديد...";
                     password: true;
                     text <=> root.recovery_new_pass;
                 }
 
-                KinanaButton {
-                    text: "استعادة وتعيين كلمة المرور";
-                    variant: "primary";
-                    clicked => {
-                        root.try_recover_vault(root.recovery_input_key, root.recovery_new_pass);
+                KinanaInput {
+                    label: "تأكيد كلمة المرور الجديدة";
+                    placeholder: "أعد إدخال الرمز الجديد...";
+                    password: true;
+                    text <=> root.recovery_confirm_pass;
+                }
+
+                HorizontalLayout {
+                    spacing: 10px;
+                    alignment: end;
+
+                    KinanaButton {
+                        text: "إلغاء";
+                        variant: "ghost";
+                        clicked => { root.show_recovery_modal = false; }
+                    }
+
+                    KinanaButton {
+                        text: "استعادة الخزنة وتعيين الرمز";
+                        variant: "primary";
+                        clicked => {
+                            root.recover_vault(
+                                root.recovery_input_key,
+                                root.recovery_new_pass,
+                                root.recovery_confirm_pass
+                            );
+                        }
                     }
                 }
-            }
-        }
-
-        // =========================================================================
-        // TOAST NOTIFICATION
-        // =========================================================================
-        if root.show_toast: Rectangle {
-            width: 340px;
-            height: 44px;
-            x: (root.width - self.width) / 2;
-            y: 20px;
-            border-radius: 10px;
-            background: #10b981;
-            drop-shadow-blur: 16px;
-            drop-shadow-color: #000000.transparentize(0.5);
-
-            Text {
-                text: root.toast_text;
-                color: #ffffff;
-                font-family: Theme.font-family;
-                font-size: 13px;
-                font-weight: 700;
-                horizontal-alignment: center;
-                vertical-alignment: center;
             }
         }
     }

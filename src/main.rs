@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -10,67 +11,123 @@ use kinana_native::win32;
 
 slint::include_modules!();
 
-fn get_badge_color(name: &str) -> slint::Color {
-    let colors = [
-        slint::Color::from_argb_u8(255, 16, 185, 129), // emerald
-        slint::Color::from_argb_u8(255, 14, 165, 233), // sky
-        slint::Color::from_argb_u8(255, 139, 92, 246), // violet
-        slint::Color::from_argb_u8(255, 245, 158, 11), // amber
-        slint::Color::from_argb_u8(255, 244, 63, 94),  // rose
-        slint::Color::from_argb_u8(255, 99, 102, 241), // indigo
-        slint::Color::from_argb_u8(255, 20, 184, 166), // teal
-        slint::Color::from_argb_u8(255, 249, 115, 22), // orange
-    ];
-    let hash: usize = name.bytes().fold(0usize, |acc, b| acc.wrapping_add(b as usize));
-    colors[hash % colors.len()]
+fn get_brand_color(name: &str) -> slint::Color {
+    let lower = name.trim().to_lowercase();
+    if lower.contains("absher") || lower.contains("أبشر") {
+        slint::Color::from_argb_u8(255, 0, 104, 55) // #006837
+    } else if lower.contains("nafath") || lower.contains("نفاذ") {
+        slint::Color::from_argb_u8(255, 0, 122, 94) // #007a5e
+    } else if lower.contains("tawakkalna") || lower.contains("توكلنا") {
+        slint::Color::from_argb_u8(255, 16, 124, 65) // #107c41
+    } else if lower.contains("rajhi") || lower.contains("الراجحي") {
+        slint::Color::from_argb_u8(255, 26, 59, 139)
+    } else if lower.contains("alinma") || lower.contains("الانماء") || lower.contains("الإنماء") {
+        slint::Color::from_argb_u8(255, 150, 24, 40)
+    } else if lower.contains("stc") {
+        slint::Color::from_argb_u8(255, 79, 19, 137)
+    } else if lower.contains("noon") || lower.contains("نون") {
+        slint::Color::from_argb_u8(255, 251, 238, 19)
+    } else if lower.contains("amazon") || lower.contains("امازون") || lower.contains("أمازون") {
+        slint::Color::from_argb_u8(255, 255, 153, 0)
+    } else {
+        let colors = [
+            slint::Color::from_argb_u8(255, 16, 185, 129),
+            slint::Color::from_argb_u8(255, 14, 165, 233),
+            slint::Color::from_argb_u8(255, 139, 92, 246),
+            slint::Color::from_argb_u8(255, 245, 158, 11),
+            slint::Color::from_argb_u8(255, 244, 63, 94),
+            slint::Color::from_argb_u8(255, 99, 102, 241),
+            slint::Color::from_argb_u8(255, 20, 184, 166),
+            slint::Color::from_argb_u8(255, 249, 115, 22),
+        ];
+        let hash: usize = name.bytes().fold(0usize, |acc, b| acc.wrapping_add(b as usize));
+        colors[hash % colors.len()]
+    }
 }
 
-fn reload_services_into_ui(
-    state: &AppState,
-    window: &MainWindow,
-    search_query: &str,
-    category_filter: &str,
-) {
+fn get_service_cover(name: &str, icon_data: Option<&str>) -> (bool, slint::Image) {
+    if let Some(path_str) = icon_data {
+        let p = Path::new(path_str);
+        if p.exists() {
+            if let Ok(img) = slint::Image::load_from_path(p) {
+                return (true, img);
+            }
+        }
+    }
+
+    let lower = name.trim().to_lowercase();
+    let preset = if lower.contains("absher") || lower.contains("أبشر") {
+        Some("absher.svg")
+    } else if lower.contains("nafath") || lower.contains("نفاذ") {
+        Some("nafath.svg")
+    } else if lower.contains("tawakkalna") || lower.contains("توكلنا") {
+        Some("tawakkalna.svg")
+    } else if lower.contains("rajhi") || lower.contains("الراجحي") {
+        Some("alrajhibank.svg")
+    } else if lower.contains("alinma") || lower.contains("الانماء") || lower.contains("الإنماء") {
+        Some("alinmabank.svg")
+    } else if lower.contains("stc pay") || lower.contains("stcpay") {
+        Some("stcpay.svg")
+    } else if lower.contains("stc") {
+        Some("stc.svg")
+    } else if lower.contains("noon") || lower.contains("نون") {
+        Some("noon.svg")
+    } else if lower.contains("jarir") || lower.contains("جرير") {
+        Some("jarir.svg")
+    } else if lower.contains("amazon") || lower.contains("أمازون") || lower.contains("امازون") {
+        Some("amazon.svg")
+    } else if lower.contains("sehhaty") || lower.contains("صحتي") {
+        Some("sehhaty.svg")
+    } else if lower.contains("qiwa") || lower.contains("قوى") {
+        Some("qiwa.svg")
+    } else if lower.contains("openai") || lower.contains("chatgpt") {
+        Some("openai.svg")
+    } else if lower.contains("claude") || lower.contains("كلود") {
+        Some("claude.svg")
+    } else if lower.contains("steam") || lower.contains("ستيم") {
+        Some("steam.svg")
+    } else if lower.contains("playstation") || lower.contains("بلايستيشن") {
+        Some("playstation.svg")
+    } else if lower.contains("citizen") || lower.contains("المواطن") {
+        Some("citizenaccount.svg")
+    } else {
+        None
+    };
+
+    if let Some(file_name) = preset {
+        let preset_path = Path::new("ui/assets/presets").join(file_name);
+        if preset_path.exists() {
+            if let Ok(img) = slint::Image::load_from_path(&preset_path) {
+                return (true, img);
+            }
+        }
+    }
+
+    (false, slint::Image::default())
+}
+
+fn reload_services_into_ui(state: &AppState, window: &MainWindow) {
     if let Ok(summary) = state.get_vault_summary() {
-        let mut filtered_services = Vec::new();
-        let q = search_query.trim().to_lowercase();
+        let mut service_items = Vec::new();
 
         for svc in &summary.services {
-            // Category check from icon_data (e.g. "cat:Social")
-            let category = if let Some(ref icon) = svc.icon_data {
-                if icon.starts_with("cat:") {
-                    icon[4..].to_string()
-                } else {
-                    "عام".to_string()
-                }
-            } else {
-                "عام".to_string()
-            };
-
-            if category_filter != "الكل" && category != category_filter {
-                continue;
-            }
-
-            if !q.is_empty() {
-                let matches_name = svc.name.to_lowercase().contains(&q);
-                let matches_acc = svc.accounts.iter().any(|a| a.username.to_lowercase().contains(&q));
-                if !matches_name && !matches_acc {
-                    continue;
-                }
-            }
-
             let initial = svc.name.chars().next().unwrap_or(' ').to_string();
-            filtered_services.push(ServiceItem {
+            let (has_cover, cover_image) = get_service_cover(&svc.name, svc.icon_data.as_deref());
+            let badge_color = get_brand_color(&svc.name);
+
+            service_items.push(ServiceItem {
                 id: svc.id.clone().into(),
                 name: svc.name.clone().into(),
                 initial: initial.into(),
-                category: category.into(),
+                category: "عام".into(),
                 accounts_count: svc.accounts.len() as i32,
-                badge_color: get_badge_color(&svc.name),
+                badge_color,
+                has_cover,
+                cover_image,
             });
         }
 
-        window.set_services(slint::ModelRc::new(slint::VecModel::from(filtered_services)));
+        window.set_services(slint::ModelRc::new(slint::VecModel::from(service_items)));
         window.set_total_accounts_count(summary.total_accounts as i32);
     }
 }
@@ -108,7 +165,7 @@ fn main() -> Result<(), slint::PlatformError> {
     if state.vault_exists() && has_saved {
         if let Ok(Some(_)) = state.auto_unlock_vault() {
             main_window.set_current_view("dashboard".into());
-            reload_services_into_ui(&state, &main_window, "", "الكل");
+            reload_services_into_ui(&state, &main_window);
             show_toast_message(&main_window, "تم فتح الخزنة تلقائياً بنجاح");
         }
     }
@@ -141,14 +198,17 @@ fn main() -> Result<(), slint::PlatformError> {
 
             match state.create_vault(pass) {
                 Ok(_) => {
-                    window.set_status_message("".into());
-                    window.set_is_error_status(false);
+                    let _ = unsafe { win32::store_vault_key_wincred(pass) };
+                    window.set_has_saved_credentials(true);
                     window.set_current_view("dashboard".into());
-                    reload_services_into_ui(&state, &window, "", "الكل");
-                    show_toast_message(&window, "تم إنشاء الخزنة بنجاح");
+                    reload_services_into_ui(&state, &window);
+                    if let Ok(key) = state.get_or_generate_recovery_key() {
+                        window.set_emergency_key_display(key.into());
+                    }
+                    show_toast_message(&window, "تم إنشاء الخزنة بنجاح وحفظ الرمز في نظام ويندوز");
                 }
-                Err(err) => {
-                    window.set_status_message(err.into());
+                Err(e) => {
+                    window.set_status_message(format!("فشل إنشاء الخزنة: {}", e).into());
                     window.set_is_error_status(true);
                 }
             }
@@ -169,18 +229,23 @@ fn main() -> Result<(), slint::PlatformError> {
             };
 
             if pass.is_empty() {
-                window.set_status_message("أدخل رمز المرور أولاً".into());
+                window.set_status_message("يرجى إدخال كلمة المرور".into());
                 window.set_is_error_status(true);
                 return;
             }
 
             match state.unlock_vault(pass) {
                 Ok(_) => {
+                    let _ = unsafe { win32::store_vault_key_wincred(pass) };
+                    window.set_has_saved_credentials(true);
                     window.set_status_message("".into());
                     window.set_is_error_status(false);
-                    window.set_unlock_pass("".into());
                     window.set_current_view("dashboard".into());
-                    reload_services_into_ui(&state, &window, "", "الكل");
+                    window.set_unlock_pass("".into());
+                    reload_services_into_ui(&state, &window);
+                    if let Ok(key) = state.get_or_generate_recovery_key() {
+                        window.set_emergency_key_display(key.into());
+                    }
                     show_toast_message(&window, "تم فتح الخزنة بنجاح");
                 }
                 Err(_) => {
@@ -192,7 +257,7 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     // =========================================================================
-    // CALLBACK: TRY QUICK UNLOCK
+    // CALLBACK: TRY QUICK UNLOCK (WINCRED)
     // =========================================================================
     {
         let state = Arc::clone(&state);
@@ -208,11 +273,15 @@ fn main() -> Result<(), slint::PlatformError> {
                     window.set_status_message("".into());
                     window.set_is_error_status(false);
                     window.set_current_view("dashboard".into());
-                    reload_services_into_ui(&state, &window, "", "الكل");
-                    show_toast_message(&window, "تم الفتح السريع بنجاح");
+                    window.set_unlock_pass("".into());
+                    reload_services_into_ui(&state, &window);
+                    if let Ok(key) = state.get_or_generate_recovery_key() {
+                        window.set_emergency_key_display(key.into());
+                    }
+                    show_toast_message(&window, "تم الفتح التلقائي بنجاح");
                 }
                 _ => {
-                    window.set_status_message("تعذر فتح الخزنة تلقائياً. اكتب الرمز يدوياً.".into());
+                    window.set_status_message("لم يتم العثور على رمز محفوظ صالح في ويندوز".into());
                     window.set_is_error_status(true);
                 }
             }
@@ -241,11 +310,11 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     // =========================================================================
-    // CALLBACK: COPY SECURE TEXT
+    // CALLBACK: COPY TO CLIPBOARD
     // =========================================================================
     {
         let window_weak = main_window.as_weak();
-        main_window.on_copy_secure_text(move |text| {
+        main_window.on_copy_to_clipboard(move |text| {
             if text.is_empty() {
                 return;
             }
@@ -258,7 +327,7 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     // =========================================================================
-    // CALLBACK: COPY SERVICE PASSWORD (QUICK ACTION)
+    // CALLBACK: COPY SERVICE PASSWORD
     // =========================================================================
     {
         let state = Arc::clone(&state);
@@ -339,13 +408,52 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     // =========================================================================
+    // CALLBACK: COVER IMAGE PICKER & REMOVAL
+    // =========================================================================
+    {
+        let window_weak = main_window.as_weak();
+        main_window.on_pick_service_cover(move || {
+            let window = match window_weak.upgrade() {
+                Some(w) => w,
+                None => return,
+            };
+
+            if let Some(path) = rfd::FileDialog::new()
+                .add_filter("Images", &["png", "jpg", "jpeg", "webp", "svg", "bmp"])
+                .set_title("اختر غلاف أو صورة الخدمة")
+                .pick_file()
+            {
+                let path_str = path.to_string_lossy().to_string();
+                if let Ok(img) = slint::Image::load_from_path(&path) {
+                    window.set_new_service_icon_path(path_str.into());
+                    window.set_new_service_has_custom_icon(true);
+                    window.set_new_service_preview_icon(img);
+                }
+            }
+        });
+    }
+
+    {
+        let window_weak = main_window.as_weak();
+        main_window.on_remove_service_cover(move || {
+            let window = match window_weak.upgrade() {
+                Some(w) => w,
+                None => return,
+            };
+            window.set_new_service_icon_path("".into());
+            window.set_new_service_has_custom_icon(false);
+            window.set_new_service_preview_icon(slint::Image::default());
+        });
+    }
+
+    // =========================================================================
     // CALLBACK: ADD SERVICE
     // =========================================================================
     {
         let state = Arc::clone(&state);
         let window_weak = main_window.as_weak();
         main_window.on_add_service(
-            move |name, category, username, password, email, recovery, notes, url| {
+            move |name, category, username, password, email, recovery, notes, url, icon_path| {
                 let window = match window_weak.upgrade() {
                     Some(w) => w,
                     None => return,
@@ -357,10 +465,16 @@ fn main() -> Result<(), slint::PlatformError> {
                     return;
                 }
 
+                let icon_data = if icon_path.trim().is_empty() {
+                    None
+                } else {
+                    Some(icon_path.trim().to_string())
+                };
+
                 match state.add_service(
                     name,
                     category.trim(),
-                    None,
+                    icon_data,
                     username.trim(),
                     password.trim(),
                     email.trim(),
@@ -369,9 +483,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     url.trim(),
                 ) {
                     Ok(_) => {
-                        let search = window.get_search_text();
-                        let cat = window.get_selected_category();
-                        reload_services_into_ui(&state, &window, search.as_str(), cat.as_str());
+                        reload_services_into_ui(&state, &window);
                         show_toast_message(&window, "تمت إضافة الخدمة بنجاح");
                     }
                     Err(err) => {
@@ -395,9 +507,7 @@ fn main() -> Result<(), slint::PlatformError> {
             };
 
             if let Ok(_) = state.delete_service(service_id.as_str()) {
-                let search = window.get_search_text();
-                let cat = window.get_selected_category();
-                reload_services_into_ui(&state, &window, search.as_str(), cat.as_str());
+                reload_services_into_ui(&state, &window);
                 show_toast_message(&window, "تم حذف الخدمة");
             }
         });
@@ -416,9 +526,7 @@ fn main() -> Result<(), slint::PlatformError> {
             };
 
             if let Ok(_) = state.duplicate_service(service_id.as_str()) {
-                let search = window.get_search_text();
-                let cat = window.get_selected_category();
-                reload_services_into_ui(&state, &window, search.as_str(), cat.as_str());
+                reload_services_into_ui(&state, &window);
                 show_toast_message(&window, "تم تكرار الخدمة بنجاح");
             }
         });
@@ -449,7 +557,6 @@ fn main() -> Result<(), slint::PlatformError> {
                 );
 
                 if let Ok(_) = res {
-                    // Refresh accounts in modal
                     if let Ok(accounts) = state.get_service_accounts(service_id.as_str()) {
                         let items: Vec<AccountItem> = accounts
                             .into_iter()
@@ -468,9 +575,7 @@ fn main() -> Result<(), slint::PlatformError> {
                         window.set_current_accounts(slint::ModelRc::new(slint::VecModel::from(items)));
                     }
 
-                    let search = window.get_search_text();
-                    let cat = window.get_selected_category();
-                    reload_services_into_ui(&state, &window, search.as_str(), cat.as_str());
+                    reload_services_into_ui(&state, &window);
                     show_toast_message(&window, "تمت إضافة الحساب بنجاح");
                 }
             },
@@ -508,9 +613,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     window.set_current_accounts(slint::ModelRc::new(slint::VecModel::from(items)));
                 }
 
-                let search = window.get_search_text();
-                let cat = window.get_selected_category();
-                reload_services_into_ui(&state, &window, search.as_str(), cat.as_str());
+                reload_services_into_ui(&state, &window);
                 show_toast_message(&window, "تم حذف الحساب");
             }
         });
@@ -521,12 +624,12 @@ fn main() -> Result<(), slint::PlatformError> {
     // =========================================================================
     {
         let window_weak = main_window.as_weak();
-        main_window.on_request_generate_password(move |len, symbols, numbers, uppercase| {
+        main_window.on_request_generate_password(move || {
             let window = match window_weak.upgrade() {
                 Some(w) => w,
                 None => return,
             };
-            let pwd = password_gen::generate_password(len as usize, symbols, numbers, uppercase);
+            let pwd = password_gen::generate_password(16, true, true, true);
             window.set_gen_password(pwd.into());
         });
     }
@@ -571,7 +674,6 @@ fn main() -> Result<(), slint::PlatformError> {
             let dialog = rfd::FileDialog::new().add_filter("Kinana Vault", &["dat"]);
 
             if let Some(src) = dialog.pick_file() {
-                // If the user already unlocked or if in setup, prompt or try auto unlock
                 let mut password = window.get_unlock_pass().to_string();
                 if password.is_empty() {
                     password = window.get_setup_pass().to_string();
@@ -585,7 +687,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 match state.import_vault_backup(&src, &password) {
                     Ok(_) => {
                         window.set_current_view("dashboard".into());
-                        reload_services_into_ui(&state, &window, "", "الكل");
+                        reload_services_into_ui(&state, &window);
                         show_toast_message(&window, "تم استيراد الخزنة بنجاح");
                     }
                     Err(e) => show_toast_message(&window, &format!("فشل الاستيراد: {}", e)),
@@ -630,12 +732,12 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     // =========================================================================
-    // CALLBACK: TRY RECOVER VAULT
+    // CALLBACK: RECOVER VAULT
     // =========================================================================
     {
         let state = Arc::clone(&state);
         let window_weak = main_window.as_weak();
-        main_window.on_try_recover_vault(move |recovery_key, new_pass| {
+        main_window.on_recover_vault(move |recovery_key, new_pass, confirm_pass| {
             let window = match window_weak.upgrade() {
                 Some(w) => w,
                 None => return,
@@ -649,39 +751,19 @@ fn main() -> Result<(), slint::PlatformError> {
                 return;
             }
 
+            if new_p != confirm_pass.trim() {
+                show_toast_message(&window, "كلمة المرور غير متطابقة مع التأكيد");
+                return;
+            }
+
             match state.recover_vault_with_key(key, new_p) {
                 Ok(_) => {
                     window.set_show_recovery_modal(false);
                     window.set_current_view("dashboard".into());
-                    reload_services_into_ui(&state, &window, "", "الكل");
-                    show_toast_message(&window, "تم استرداد الخزنة بنجاح");
+                    reload_services_into_ui(&state, &window);
+                    show_toast_message(&window, "تم استعادة الخزنة وتعيين كلمة المرور بنجاح");
                 }
                 Err(e) => show_toast_message(&window, &format!("فشل الاسترداد: {}", e)),
-            }
-        });
-    }
-
-    // =========================================================================
-    // CALLBACK: SEARCH & FILTER
-    // =========================================================================
-    {
-        let state = Arc::clone(&state);
-        let window_weak = main_window.as_weak();
-        main_window.on_search_services(move |q| {
-            if let Some(w) = window_weak.upgrade() {
-                let cat = w.get_selected_category();
-                reload_services_into_ui(&state, &w, q.as_str(), cat.as_str());
-            }
-        });
-    }
-
-    {
-        let state = Arc::clone(&state);
-        let window_weak = main_window.as_weak();
-        main_window.on_filter_by_category(move |cat| {
-            if let Some(w) = window_weak.upgrade() {
-                let q = w.get_search_text();
-                reload_services_into_ui(&state, &w, q.as_str(), cat.as_str());
             }
         });
     }
@@ -714,7 +796,6 @@ fn main() -> Result<(), slint::PlatformError> {
                     None => return,
                 };
 
-                // Check auto-lock timeout
                 if state.is_unlocked() && state.check_idle_timeout() {
                     state.lock_vault();
                     window.set_services(slint::ModelRc::new(slint::VecModel::default()));

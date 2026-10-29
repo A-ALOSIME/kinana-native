@@ -5,109 +5,103 @@ export component ServiceCard {
     in property <string> id: "";
     in property <string> name: "خدمة";
     in property <string> initial: "خ";
-    in property <color> badge-color: #10b981;
+    in property <color> brand-color: #006837;
     in property <int> accounts-count: 1;
     in property <string> category: "عام";
+    in property <bool> has-cover: false;
+    in property <image> cover-image;
 
     callback clicked();
     callback quick-copy();
 
-    min-width: 220px;
-    min-height: 140px;
+    width: 290px;
+    height: 175px;
 
     rect := Rectangle {
-        border-radius: 12px;
-        background: touch.has-hover ? Theme.surface-hover : Theme.surface-card;
+        border-radius: 18px;
+        background: touch.has-hover ? #171a25 : #11131a;
         border-width: 1px;
-        border-color: touch.has-hover ? Theme.border-focus : Theme.border;
+        border-color: touch.has-hover ? #3b82f6 : #222533;
+        clip: true;
 
         animate background { duration: 150ms; }
         animate border-color { duration: 150ms; }
 
-        VerticalLayout {
-            padding: 16px;
-            spacing: 12px;
+        // Poster Inner Frame
+        Rectangle {
+            x: 8px;
+            y: 8px;
+            width: parent.width - 16px;
+            height: parent.height - 16px;
+            border-radius: 12px;
+            clip: true;
+            background: root.brand-color;
 
-            // Top row: Initial avatar + Category tag
-            HorizontalLayout {
-                alignment: space-between;
-
-                // Category Tag
-                Rectangle {
-                    border-radius: 6px;
-                    background: #1c2436;
-
-                    HorizontalLayout {
-                        padding-left: 8px;
-                        padding-right: 8px;
-                        padding-top: 2px;
-                        padding-bottom: 2px;
-
-                        Text {
-                            text: root.category;
-                            color: Theme.text-secondary;
-                            font-family: Theme.font-family;
-                            font-size: 11px;
-                            font-weight: 500;
-                        }
-                    }
-                }
-
-                // Initial Avatar
-                Rectangle {
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 10px;
-                    background: root.badge-color.transparentize(0.85);
-                    border-width: 1px;
-                    border-color: root.badge-color.transparentize(0.5);
-
-                    Text {
-                        text: root.initial;
-                        color: root.badge-color;
-                        font-family: Theme.font-family;
-                        font-size: 16px;
-                        font-weight: 700;
-                        horizontal-alignment: center;
-                        vertical-alignment: center;
-                    }
-                }
+            // Ambient background gradient
+            Rectangle {
+                background: @linear-gradient(135deg, #000000.transparentize(0.1) 0%, #000000.transparentize(0.6) 100%);
             }
 
-            // Middle: Service Name & Accounts Count
-            VerticalLayout {
-                spacing: 4px;
+            // Cover Image if provided
+            if root.has-cover: Image {
+                source: root.cover-image;
+                width: 100%;
+                height: 100%;
+                image-fit: contain;
+            }
+
+            // Fallback: Large bold service title / initial
+            if !root.has-cover: VerticalLayout {
                 alignment: center;
+                spacing: 6px;
+
+                Text {
+                    text: root.initial;
+                    color: #ffffff;
+                    font-family: Theme.font-family;
+                    font-size: 44px;
+                    font-weight: 800;
+                    horizontal-alignment: center;
+                }
 
                 Text {
                     text: root.name;
-                    color: Theme.text-primary;
+                    color: #ffffff;
                     font-family: Theme.font-family;
-                    font-size: 16px;
+                    font-size: 20px;
                     font-weight: 700;
-                    horizontal-alignment: right;
-                    overflow: elide;
-                }
-
-                Text {
-                    text: root.accounts-count <= 1 ? (root.accounts-count == 1 ? "حساب واحد" : "لا توجد حسابات") : (root.accounts-count == 2 ? "حسابان" : (root.accounts-count + " حسابات"));
-                    color: Theme.text-muted;
-                    font-family: Theme.font-family;
-                    font-size: 12px;
-                    horizontal-alignment: right;
+                    horizontal-alignment: center;
                 }
             }
 
-            // Bottom action: Quick copy password
-            HorizontalLayout {
-                alignment: end;
+            // Bottom subtle scrim gradient with service name and account count
+            Rectangle {
+                y: parent.height - 48px;
+                height: 48px;
+                background: @linear-gradient(0deg, #000000.transparentize(0.15) 0%, transparent 100%);
 
-                KinanaButton {
-                    text: "نسخ الرمز";
-                    variant: "secondary";
-                    custom-font-size: 12px;
-                    clicked => {
-                        root.quick-copy();
+                HorizontalLayout {
+                    padding-left: 12px;
+                    padding-right: 12px;
+                    alignment: space-between;
+
+                    Text {
+                        text: root.accounts-count <= 1 ? (root.accounts-count == 1 ? "حساب 1" : "فارغ") : (root.accounts-count + " حسابات");
+                        color: #cbd5e1;
+                        font-family: Theme.font-family;
+                        font-size: 11px;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                    }
+
+                    Text {
+                        text: root.name;
+                        color: #ffffff;
+                        font-family: Theme.font-family;
+                        font-size: 15px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                        horizontal-alignment: right;
                     }
                 }
             }

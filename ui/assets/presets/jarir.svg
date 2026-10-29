@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <defs>
+    <linearGradient id="jarirBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121214"/>
+      <stop offset="100%" stop-color="#1C1C20"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#jarirBg)"/>
+  <circle cx="320" cy="135" r="55" fill="#FFFFFF"/>
+  <g transform="translate(280, 95) scale(2.5)">
+    <path d="M26.392 17.86v13.93s-10.916 2.32-16.569-8.482h5.205s2.281 3.575 6.843 3.924v-9.371zM40 17.687c-1.97 12.057-12.184 13.931-12.184 13.931v-4.636c6.9-2.34 7.6-9.295 7.6-9.295zM11.09 6.788C15.38-.515 24.97.008 24.97.008c12.69.888 14.58 12.577 14.58 12.577H13.136c-2.046 4.039.898 9.468.898 9.468H9.122c-2.962-8.02.877-14.102.877-14.102h22.202C24.776.625 17.076 6.788 17.076 6.788zm13.022 6.163a2.29 2.29 0 0 1 2.28 2.282c0 1.255-1.032 2.26-2.28 2.26-1.267 0-2.3-1.005-2.3-2.26a2.296 2.296 0 0 1 2.3-2.282" fill="#EC1D24" transform="translate(-8, 0)"/>
+  </g>
+  <text x="320" y="235" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#FFFFFF" letter-spacing="1">مكتبة جرير</text>
+  <text x="320" y="268" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#EC1D24" letter-spacing="3">JARIR BOOKSTORE</text>
+</svg>

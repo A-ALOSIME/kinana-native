@@ -6,6 +6,10 @@ export component KinanaInput {
     in property <string> label: "";
     in property <bool> password: false;
     in property <bool> enabled: true;
+    in property <length> custom-height: 44px;
+    in property <length> border-radius: 12px;
+    in property <length> font-size: 14px;
+    in property <TextHorizontalAlignment> text-align: right;
     in property <InputType> input-type: password ? InputType.password : InputType.text;
     
     callback accepted();
@@ -20,21 +24,21 @@ export component KinanaInput {
             font-family: Theme.font-family;
             font-size: 13px;
             font-weight: 600;
-            horizontal-alignment: right;
+            horizontal-alignment: root.text-align;
         }
 
         rect := Rectangle {
-            min-height: 40px;
-            background: Theme.surface-card;
-            border-radius: 8px;
+            min-height: root.custom-height;
+            background: #14161f;
+            border-radius: root.border-radius;
             border-width: 1px;
-            border-color: input.has-focus ? Theme.border-focus : Theme.border;
+            border-color: input.has-focus ? #3b82f6 : #232634;
 
             animate border-color { duration: 150ms; }
 
             HorizontalLayout {
-                padding-left: 12px;
-                padding-right: 12px;
+                padding-left: 14px;
+                padding-right: 14px;
                 alignment: stretch;
 
                 input := TextInput {
@@ -43,25 +47,25 @@ export component KinanaInput {
                     enabled: root.enabled;
                     color: Theme.text-primary;
                     font-family: Theme.font-family;
-                    font-size: 14px;
+                    font-size: root.font-size;
                     vertical-alignment: center;
-                    horizontal-alignment: right;
+                    horizontal-alignment: root.text-align;
                     accepted => { root.accepted(); }
                     edited => { root.edited(self.text); }
                 }
             }
 
             if root.text == "" && !input.has-focus: HorizontalLayout {
-                padding-left: 12px;
-                padding-right: 12px;
+                padding-left: 14px;
+                padding-right: 14px;
                 alignment: stretch;
                 Text {
                     text: root.placeholder;
                     color: Theme.text-muted;
                     font-family: Theme.font-family;
-                    font-size: 13px;
+                    font-size: root.font-size;
                     vertical-alignment: center;
-                    horizontal-alignment: right;
+                    horizontal-alignment: root.text-align;
                 }
             }
         }

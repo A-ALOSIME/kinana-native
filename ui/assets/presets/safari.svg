@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <defs>
+    <linearGradient id="safariCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#081026"/>
+      <stop offset="100%" stop-color="#102048"/>
+    </linearGradient>
+    <linearGradient id="safariDisc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D2FF"/>
+      <stop offset="100%" stop-color="#0066FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#safariCardBg)"/>
+  <g transform="translate(320, 145)">
+    <!-- Blue Oceanic Disc -->
+    <circle cx="0" cy="0" r="76" fill="url(#safariDisc)"/>
+    <!-- Outer rim -->
+    <circle cx="0" cy="0" r="72" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+    <!-- Concentric inner guides -->
+    <circle cx="0" cy="0" r="54" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    <!-- Compass needle rotated by 45 degrees -->
+    <g transform="rotate(45)">
+      <!-- North Red Needle -->
+      <polygon points="0,-68 11,0 0,-10" fill="#FF3B30"/>
+      <polygon points="0,-68 -11,0 0,-10" fill="#E0241A"/>
+      <!-- South White Needle -->
+      <polygon points="0,68 11,0 0,10" fill="#FFFFFF"/>
+      <polygon points="0,68 -11,0 0,10" fill="#DCE0E6"/>
+      <!-- Center Pivot Pin -->
+      <circle cx="0" cy="0" r="7" fill="#FFFFFF"/>
+      <circle cx="0" cy="0" r="4" fill="#0066FF"/>
+    </g>
+  </g>
+  <text x="320" y="275" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF" letter-spacing="2">Safari</text>
+</svg>

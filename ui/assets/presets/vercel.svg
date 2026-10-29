@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <rect width="640" height="360" fill="#000000"/>
+  <g transform="translate(320, 145) scale(5.8) translate(-12, -12)">
+    <path d="m12 1.608 12 20.784H0Z" fill="#FFFFFF"/>
+  </g>
+  <text x="320" y="270" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="800" fill="#FFFFFF" letter-spacing="5">VERCEL</text>
+</svg>
