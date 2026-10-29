@@ -1,84 +1,94 @@
 import { Theme } from "../theme.slint";
-import { KinanaButton } from "./button.slint";
-import { ScrollView } from "std-widgets.slint";
 
 export component KinanaModal {
-    in property <string> title: "نافذة";
-    in property <length> modal-width: 520px;
-    in property <length> modal-height: 520px;
-    in property <length> modal-max-height: 680px;
+    in property <string> title: "";
+    in property <length> modal-width: 680px;
+    in property <length> modal-height: 580px;
+    in property <length> modal-max-height: 720px;
     callback close();
 
-    Rectangle {
-        background: #000000.transparentize(0.45);
+    x: 0px;
+    y: 0px;
+    width: 100%;
+    height: 100%;
 
-        // Clicking outside the card closes modal
+    // Dim background overlay covering the entire window
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #000000.transparentize(0.35);
+
+        // Clicking anywhere outside the modal card closes the modal!
         TouchArea {
             clicked => {
                 root.close();
             }
         }
+    }
 
-        // Modal Box
-        Rectangle {
-            width: root.modal-width;
-            max-height: root.modal-max-height;
-            border-radius: 20px;
-            background: #111319;
-            border-width: 1px;
-            border-color: #242735;
-            drop-shadow-blur: 24px;
-            drop-shadow-color: #000000.transparentize(0.5);
+    // Modal Box Centered
+    VerticalLayout {
+        alignment: center;
 
-            // Block clicks on modal card from triggering backdrop close
-            TouchArea {}
+        HorizontalLayout {
+            alignment: center;
 
-            VerticalLayout {
-                padding: 24px;
-                spacing: 16px;
+            Rectangle {
+                width: root.modal-width;
+                max-height: root.modal-max-height;
+                border-radius: 20px;
+                background: #0a0b0e;
+                border-width: 1px;
+                border-color: #1f2128;
+                clip: true;
 
-                // Title bar
-                HorizontalLayout {
-                    alignment: space-between;
+                // Stop backdrop clicks inside modal card from closing the modal
+                TouchArea {}
 
-                    // Close Button X
-                    Rectangle {
-                        width: 36px;
-                        height: 36px;
-                        border-radius: 10px;
-                        background: close-touch.has-hover ? #242736 : #181a24;
-                        border-width: 1px;
-                        border-color: #2e3244;
+                VerticalLayout {
+                    padding: 24px;
+                    spacing: 16px;
 
-                        Text {
-                            text: "✕";
-                            color: close-touch.has-hover ? #ffffff : #9ca3af;
-                            font-size: 15px;
-                            font-weight: 700;
-                            horizontal-alignment: center;
-                            vertical-alignment: center;
-                        }
+                    // Header row
+                    HorizontalLayout {
+                        alignment: space-between;
 
-                        close-touch := TouchArea {
-                            clicked => {
-                                root.close();
+                        // Close button X on top left
+                        Rectangle {
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 8px;
+                            background: close-touch.has-hover ? #20222a : transparent;
+
+                            Image {
+                                source: @image-url("../assets/icons/x.svg");
+                                width: 14px;
+                                height: 14px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
                             }
-                            mouse-cursor: pointer;
+
+                            close-touch := TouchArea {
+                                clicked => {
+                                    root.close();
+                                }
+                                mouse-cursor: pointer;
+                            }
+                        }
+
+                        if root.title != "": Text {
+                            text: root.title;
+                            color: #ffffff;
+                            font-family: Theme.font-family;
+                            font-size: 20px;
+                            font-weight: 800;
+                            vertical-alignment: center;
+                            horizontal-alignment: right;
                         }
                     }
 
-                    Text {
-                        text: root.title;
-                        color: Theme.text-primary;
-                        font-family: Theme.font-family;
-                        font-size: 19px;
-                        font-weight: 700;
-                        vertical-alignment: center;
-                        horizontal-alignment: right;
-                    }
+                    @children
                 }
-
-                @children
             }
         }
     }

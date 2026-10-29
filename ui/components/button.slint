@@ -2,11 +2,13 @@ import { Theme } from "../theme.slint";
 
 export component KinanaButton {
     in property <string> text: "زر";
-    in property <string> variant: "primary"; // "primary" (white), "green", "secondary", "danger", "ghost"
+    in property <string> variant: "primary"; // "primary" (white), "secondary", "danger", "ghost", "outline", "amber"
     in property <bool> enabled: true;
-    in property <length> custom-font-size: 14px;
-    in property <length> custom-height: 44px;
-    in property <length> border-radius: 12px;
+    in property <length> custom-font-size: 13px;
+    in property <length> custom-height: 40px;
+    in property <length> border-radius: 10px;
+    in property <bool> has-icon: false;
+    in property <image> icon;
     
     callback clicked();
 
@@ -15,45 +17,56 @@ export component KinanaButton {
 
     rect := Rectangle {
         border-radius: root.border-radius;
-        background: !root.enabled ? #181920 :
+        background: !root.enabled ? #14151b :
             touch.pressed ? (
-                root.variant == "primary" ? #e4e4e7 :
-                root.variant == "green" ? #059669 :
-                root.variant == "danger" ? #991b1b :
-                root.variant == "secondary" ? #252834 : #1c1e27
+                root.variant == "primary" ? #d4d4d8 :
+                root.variant == "danger" ? #7f1d1d :
+                root.variant == "amber" ? #b45309 :
+                root.variant == "secondary" ? #222533 : #181922
             ) :
             touch.has-hover ? (
                 root.variant == "primary" ? #f4f4f5 :
-                root.variant == "green" ? #059669 :
                 root.variant == "danger" ? #b91c1c :
-                root.variant == "secondary" ? #1f222d : #181a22
+                root.variant == "amber" ? #d97706 :
+                root.variant == "secondary" ? #1c1e28 : #15161e
             ) : (
                 root.variant == "primary" ? #ffffff :
-                root.variant == "green" ? #10b981 :
-                root.variant == "danger" ? #dc2626 :
-                root.variant == "secondary" ? #161820 : transparent
+                root.variant == "danger" ? #991b1b :
+                root.variant == "amber" ? #b45309.transparentize(0.7) :
+                root.variant == "secondary" ? #14151b :
+                root.variant == "outline" ? transparent : transparent
             );
 
-        border-width: (root.variant == "secondary" || root.variant == "ghost") ? 1px : 0px;
-        border-color: (root.variant == "secondary") ? Theme.border : (touch.has-hover ? Theme.border-light : transparent);
+        border-width: (root.variant == "secondary" || root.variant == "ghost" || root.variant == "outline" || root.variant == "amber") ? 1px : 0px;
+        border-color: (root.variant == "amber") ? #d97706 :
+            (root.variant == "outline") ? #ffffff.transparentize(0.75) :
+            (root.variant == "secondary") ? #232633 :
+            (touch.has-hover ? #2e3244 : transparent);
 
         animate background { duration: 120ms; }
         animate border-color { duration: 120ms; }
 
         HorizontalLayout {
-            padding-left: 16px;
-            padding-right: 16px;
+            padding-left: 14px;
+            padding-right: 14px;
             alignment: center;
             spacing: 8px;
 
-            Text {
+            if root.has-icon: Image {
+                source: root.icon;
+                width: 15px;
+                height: 15px;
+                vertical-alignment: center;
+            }
+
+            if root.text != "": Text {
                 text: root.text;
-                color: !root.enabled ? Theme.text-muted :
+                color: !root.enabled ? #71717a :
                     (root.variant == "primary" ? #000000 :
-                     root.variant == "green" ? #ffffff :
+                     root.variant == "amber" ? #f59e0b :
                      root.variant == "danger" ? #ffffff :
-                     root.variant == "ghost" ? (touch.has-hover ? Theme.text-primary : Theme.text-secondary) :
-                     Theme.text-primary);
+                     root.variant == "ghost" ? (touch.has-hover ? #ffffff : #a1a1aa) :
+                     #ffffff);
                 font-family: Theme.font-family;
                 font-size: root.custom-font-size;
                 font-weight: 700;

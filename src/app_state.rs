@@ -124,6 +124,16 @@ impl AppState {
         false
     }
 
+    pub fn set_auto_lock_timeout_mins(&self, mins: u64) {
+        if let Ok(mut guard) = self.auto_lock_timeout_secs.lock() {
+            if mins == 0 {
+                *guard = None; // Never lock
+            } else {
+                *guard = Some(mins * 60);
+            }
+        }
+    }
+
     pub fn vault_exists(&self) -> bool {
         self.get_vault_path().map(|p| p.exists()).unwrap_or(false)
     }

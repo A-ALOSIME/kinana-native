@@ -1,5 +1,4 @@
 import { Theme } from "../theme.slint";
-import { KinanaButton } from "./button.slint";
 
 export component ServiceCard {
     in property <string> id: "";
@@ -10,18 +9,19 @@ export component ServiceCard {
     in property <string> category: "عام";
     in property <bool> has-cover: false;
     in property <image> cover-image;
+    in property <float> zoom-level: 1.0;
 
     callback clicked();
-    callback quick-copy();
+    callback right-clicked();
 
-    width: 290px;
-    height: 175px;
+    width: 290px * root.zoom-level;
+    height: 175px * root.zoom-level;
 
     rect := Rectangle {
         border-radius: 18px;
-        background: touch.has-hover ? #171a25 : #11131a;
+        background: touch.has-hover ? #161822 : #0f1015;
         border-width: 1px;
-        border-color: touch.has-hover ? #3b82f6 : #222533;
+        border-color: touch.has-hover ? #3b82f6 : #20222c;
         clip: true;
 
         animate background { duration: 150ms; }
@@ -39,7 +39,7 @@ export component ServiceCard {
 
             // Ambient background gradient
             Rectangle {
-                background: @linear-gradient(135deg, #000000.transparentize(0.1) 0%, #000000.transparentize(0.6) 100%);
+                background: @linear-gradient(135deg, #000000.transparentize(0.15) 0%, #000000.transparentize(0.65) 100%);
             }
 
             // Cover Image if provided
@@ -59,7 +59,7 @@ export component ServiceCard {
                     text: root.initial;
                     color: #ffffff;
                     font-family: Theme.font-family;
-                    font-size: 44px;
+                    font-size: 44px * root.zoom-level;
                     font-weight: 800;
                     horizontal-alignment: center;
                 }
@@ -68,7 +68,7 @@ export component ServiceCard {
                     text: root.name;
                     color: #ffffff;
                     font-family: Theme.font-family;
-                    font-size: 20px;
+                    font-size: 18px * root.zoom-level;
                     font-weight: 700;
                     horizontal-alignment: center;
                 }
@@ -76,9 +76,9 @@ export component ServiceCard {
 
             // Bottom subtle scrim gradient with service name and account count
             Rectangle {
-                y: parent.height - 48px;
-                height: 48px;
-                background: @linear-gradient(0deg, #000000.transparentize(0.15) 0%, transparent 100%);
+                y: parent.height - (46px * root.zoom-level);
+                height: 46px * root.zoom-level;
+                background: @linear-gradient(0deg, #000000.transparentize(0.1) 0%, transparent 100%);
 
                 HorizontalLayout {
                     padding-left: 12px;
@@ -86,10 +86,10 @@ export component ServiceCard {
                     alignment: space-between;
 
                     Text {
-                        text: root.accounts-count <= 1 ? (root.accounts-count == 1 ? "حساب 1" : "فارغ") : (root.accounts-count + " حسابات");
+                        text: root.accounts-count <= 1 ? (root.accounts-count == 1 ? "1 حساب" : "فارغ") : (root.accounts-count + " حسابات");
                         color: #cbd5e1;
                         font-family: Theme.font-family;
-                        font-size: 11px;
+                        font-size: 11px * root.zoom-level;
                         font-weight: 600;
                         vertical-alignment: center;
                     }
@@ -98,7 +98,7 @@ export component ServiceCard {
                         text: root.name;
                         color: #ffffff;
                         font-family: Theme.font-family;
-                        font-size: 15px;
+                        font-size: 14px * root.zoom-level;
                         font-weight: 700;
                         vertical-alignment: center;
                         horizontal-alignment: right;
@@ -108,6 +108,11 @@ export component ServiceCard {
         }
 
         touch := TouchArea {
+            pointer-event(event) => {
+                if event.button == PointerEventButton.right && event.kind == PointerEventKind.down {
+                    root.right-clicked();
+                }
+            }
             clicked => {
                 root.clicked();
             }

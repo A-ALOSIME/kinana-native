@@ -4,6 +4,7 @@
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
+use slint::Model;
 
 use kinana_native::app_state::AppState;
 use kinana_native::password_gen;
@@ -45,67 +46,6 @@ fn get_brand_color(name: &str) -> slint::Color {
     }
 }
 
-fn get_service_cover(name: &str, icon_data: Option<&str>) -> (bool, slint::Image) {
-    if let Some(path_str) = icon_data {
-        let p = Path::new(path_str);
-        if p.exists() {
-            if let Ok(img) = slint::Image::load_from_path(p) {
-                return (true, img);
-            }
-        }
-    }
-
-    let lower = name.trim().to_lowercase();
-    let preset = if lower.contains("absher") || lower.contains("أبشر") {
-        Some("absher.svg")
-    } else if lower.contains("nafath") || lower.contains("نفاذ") {
-        Some("nafath.svg")
-    } else if lower.contains("tawakkalna") || lower.contains("توكلنا") {
-        Some("tawakkalna.svg")
-    } else if lower.contains("rajhi") || lower.contains("الراجحي") {
-        Some("alrajhibank.svg")
-    } else if lower.contains("alinma") || lower.contains("الانماء") || lower.contains("الإنماء") {
-        Some("alinmabank.svg")
-    } else if lower.contains("stc pay") || lower.contains("stcpay") {
-        Some("stcpay.svg")
-    } else if lower.contains("stc") {
-        Some("stc.svg")
-    } else if lower.contains("noon") || lower.contains("نون") {
-        Some("noon.svg")
-    } else if lower.contains("jarir") || lower.contains("جرير") {
-        Some("jarir.svg")
-    } else if lower.contains("amazon") || lower.contains("أمازون") || lower.contains("امازون") {
-        Some("amazon.svg")
-    } else if lower.contains("sehhaty") || lower.contains("صحتي") {
-        Some("sehhaty.svg")
-    } else if lower.contains("qiwa") || lower.contains("قوى") {
-        Some("qiwa.svg")
-    } else if lower.contains("openai") || lower.contains("chatgpt") {
-        Some("openai.svg")
-    } else if lower.contains("claude") || lower.contains("كلود") {
-        Some("claude.svg")
-    } else if lower.contains("steam") || lower.contains("ستيم") {
-        Some("steam.svg")
-    } else if lower.contains("playstation") || lower.contains("بلايستيشن") {
-        Some("playstation.svg")
-    } else if lower.contains("citizen") || lower.contains("المواطن") {
-        Some("citizenaccount.svg")
-    } else {
-        None
-    };
-
-    if let Some(file_name) = preset {
-        let preset_path = Path::new("ui/assets/presets").join(file_name);
-        if preset_path.exists() {
-            if let Ok(img) = slint::Image::load_from_path(&preset_path) {
-                return (true, img);
-            }
-        }
-    }
-
-    (false, slint::Image::default())
-}
-
 fn reload_services_into_ui(state: &AppState, window: &MainWindow) {
     if let Ok(summary) = state.get_vault_summary() {
         let mut service_items = Vec::new();
@@ -135,6 +75,68 @@ fn reload_services_into_ui(state: &AppState, window: &MainWindow) {
 fn show_toast_message(window: &MainWindow, msg: &str) {
     window.set_toast_text(msg.into());
     window.set_show_toast(true);
+}
+
+fn get_preset_svg_bytes(name: &str) -> Option<&'static [u8]> {
+    let lower = name.trim().to_lowercase();
+    if lower.contains("absher") || lower.contains("أبشر") {
+        Some(include_bytes!("../ui/assets/presets/absher.svg"))
+    } else if lower.contains("nafath") || lower.contains("نفاذ") {
+        Some(include_bytes!("../ui/assets/presets/nafath.svg"))
+    } else if lower.contains("tawakkalna") || lower.contains("توكلنا") {
+        Some(include_bytes!("../ui/assets/presets/tawakkalna.svg"))
+    } else if lower.contains("rajhi") || lower.contains("الراجحي") {
+        Some(include_bytes!("../ui/assets/presets/alrajhibank.svg"))
+    } else if lower.contains("alinma") || lower.contains("الانماء") || lower.contains("الإنماء") {
+        Some(include_bytes!("../ui/assets/presets/alinmabank.svg"))
+    } else if lower.contains("stc pay") || lower.contains("stcpay") {
+        Some(include_bytes!("../ui/assets/presets/stcpay.svg"))
+    } else if lower.contains("stc") {
+        Some(include_bytes!("../ui/assets/presets/stc.svg"))
+    } else if lower.contains("noon") || lower.contains("نون") {
+        Some(include_bytes!("../ui/assets/presets/noon.svg"))
+    } else if lower.contains("jarir") || lower.contains("جرير") {
+        Some(include_bytes!("../ui/assets/presets/jarir.svg"))
+    } else if lower.contains("amazon") || lower.contains("أمازون") || lower.contains("امازون") {
+        Some(include_bytes!("../ui/assets/presets/amazon.svg"))
+    } else if lower.contains("sehhaty") || lower.contains("صحتي") {
+        Some(include_bytes!("../ui/assets/presets/sehhaty.svg"))
+    } else if lower.contains("qiwa") || lower.contains("قوى") {
+        Some(include_bytes!("../ui/assets/presets/qiwa.svg"))
+    } else if lower.contains("citizen") || lower.contains("المواطن") {
+        Some(include_bytes!("../ui/assets/presets/citizenaccount.svg"))
+    } else if lower.contains("openai") || lower.contains("chatgpt") {
+        Some(include_bytes!("../ui/assets/presets/openai.svg"))
+    } else if lower.contains("claude") || lower.contains("كلود") {
+        Some(include_bytes!("../ui/assets/presets/claude.svg"))
+    } else if lower.contains("steam") || lower.contains("ستيم") {
+        Some(include_bytes!("../ui/assets/presets/steam.svg"))
+    } else if lower.contains("playstation") || lower.contains("بلايستيشن") {
+        Some(include_bytes!("../ui/assets/presets/playstation.svg"))
+    } else if lower.contains("mada") || lower.contains("مدى") {
+        Some(include_bytes!("../ui/assets/presets/mada.svg"))
+    } else {
+        None
+    }
+}
+
+fn get_service_cover(name: &str, icon_data: Option<&str>) -> (bool, slint::Image) {
+    if let Some(path_str) = icon_data {
+        let p = Path::new(path_str);
+        if p.exists() {
+            if let Ok(img) = slint::Image::load_from_path(p) {
+                return (true, img);
+            }
+        }
+    }
+
+    if let Some(svg_bytes) = get_preset_svg_bytes(name) {
+        if let Ok(img) = slint::Image::load_from_svg_data(svg_bytes) {
+            return (true, img);
+        }
+    }
+
+    (false, slint::Image::default())
 }
 
 fn main() -> Result<(), slint::PlatformError> {
@@ -383,8 +385,12 @@ fn main() -> Result<(), slint::PlatformError> {
             };
 
             window.set_active_service_id(service_id.clone());
-            window.set_active_service_name(name);
+            window.set_active_service_name(name.clone());
             window.set_active_service_category(category);
+
+            let (has_c, cover_img) = get_service_cover(&name, None);
+            window.set_active_service_has_cover(has_c);
+            window.set_active_service_cover(cover_img);
 
             if let Ok(accounts) = state.get_service_accounts(service_id.as_str()) {
                 let items: Vec<AccountItem> = accounts
@@ -398,11 +404,82 @@ fn main() -> Result<(), slint::PlatformError> {
                         notes: notes.into(),
                         url: url.into(),
                         has_password: has_p,
+                        is_revealed: false,
+                        actual_password: "".into(),
                     })
                     .collect();
 
                 window.set_current_accounts(slint::ModelRc::new(slint::VecModel::from(items)));
                 window.set_show_details_modal(true);
+            }
+        });
+    }
+
+    // =========================================================================
+    // CALLBACK: TOGGLE REVEAL PASSWORD
+    // =========================================================================
+    {
+        let state = Arc::clone(&state);
+        let window_weak = main_window.as_weak();
+        main_window.on_toggle_reveal_password(move |service_id, account_id| {
+            let window = match window_weak.upgrade() {
+                Some(w) => w,
+                None => return,
+            };
+
+            if let Ok(pwd) = state.get_account_password(service_id.as_str(), account_id.as_str()) {
+                let accounts = window.get_current_accounts();
+                let mut updated = Vec::new();
+                for i in 0..accounts.row_count() {
+                    if let Some(mut acc) = accounts.row_data(i) {
+                        if acc.id == account_id {
+                            acc.is_revealed = !acc.is_revealed;
+                            if acc.is_revealed {
+                                acc.actual_password = pwd.clone().into();
+                            } else {
+                                acc.actual_password = "".into();
+                            }
+                        }
+                        updated.push(acc);
+                    }
+                }
+                window.set_current_accounts(slint::ModelRc::new(slint::VecModel::from(updated)));
+            }
+        });
+    }
+
+    // =========================================================================
+    // CALLBACK: SET AUTO LOCK TIMEOUT
+    // =========================================================================
+    {
+        let state = Arc::clone(&state);
+        let window_weak = main_window.as_weak();
+        main_window.on_set_auto_lock_timeout(move |mins| {
+            let window = match window_weak.upgrade() {
+                Some(w) => w,
+                None => return,
+            };
+            state.set_auto_lock_timeout_mins(mins as u64);
+            window.set_auto_lock_timeout_mins(mins);
+            show_toast_message(&window, &format!("تم ضبط مهلة القفل على {} دقيقة", mins));
+        });
+    }
+
+    // =========================================================================
+    // CALLBACK: TOGGLE AUTO UNLOCK
+    // =========================================================================
+    {
+        let window_weak = main_window.as_weak();
+        main_window.on_toggle_auto_unlock(move |enable| {
+            let window = match window_weak.upgrade() {
+                Some(w) => w,
+                None => return,
+            };
+            if !enable {
+                let _ = unsafe { win32::delete_vault_key_wincred() };
+                window.set_has_saved_credentials(false);
+                window.set_auto_unlock_enabled(false);
+                show_toast_message(&window, "تم تعطيل الفتح التلقائي وحذف الرمز من ويندوز");
             }
         });
     }
@@ -569,6 +646,8 @@ fn main() -> Result<(), slint::PlatformError> {
                                 notes: n.into(),
                                 url: ur.into(),
                                 has_password: has_p,
+                                is_revealed: false,
+                                actual_password: "".into(),
                             })
                             .collect();
 
@@ -607,6 +686,8 @@ fn main() -> Result<(), slint::PlatformError> {
                             notes: n.into(),
                             url: ur.into(),
                             has_password: has_p,
+                            is_revealed: false,
+                            actual_password: "".into(),
                         })
                         .collect();
 
