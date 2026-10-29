@@ -1,0 +1,33 @@
+[package]
+name = "kinana-native"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ahmad <a.alosime9@gmail.com>"]
+description = "مدير كلمات مرور محلي وآمن لسطح المكتب مبني بالكامل بلغة Rust وبواجهة Native عبر Slint"
+
+[dependencies]
+kinana-core = { path = "crates/kinana-core" }
+slint = { version = "1.18.1", features = ["renderer-femtovg", "compat-1-2"] }
+windows-sys = { version = "0.59", features = [
+    "Win32_System_DataExchange",
+    "Win32_System_Memory",
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Security",
+    "Win32_Security_Credentials",
+    "Win32_System_Diagnostics_ToolHelp"
+] }
+rand = "0.8.5"
+rfd = "0.15"
+uuid = { version = "1", features = ["v4"] }
+zeroize = "1.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "6.0"
+
+[build-dependencies]
+slint-build = "1.18.1"
+
+[dev-dependencies]
+tempfile = "3"

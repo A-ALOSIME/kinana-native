@@ -1,0 +1,67 @@
+import { Theme } from "../theme.slint";
+
+export component KinanaButton {
+    in property <string> text: "زر";
+    in property <string> variant: "primary"; // "primary", "secondary", "danger", "ghost"
+    in property <bool> enabled: true;
+    in property <length> custom-font-size: 14px;
+    
+    callback clicked();
+
+    min-height: 38px;
+    horizontal-stretch: 0;
+
+    rect := Rectangle {
+        border-radius: 8px;
+        background: !root.enabled ? #1e2533 :
+            touch.pressed ? (
+                root.variant == "primary" ? Theme.accent-hover :
+                root.variant == "danger" ? Theme.danger-hover :
+                root.variant == "secondary" ? Theme.surface-active : #1c2333
+            ) :
+            touch.has-hover ? (
+                root.variant == "primary" ? Theme.accent-hover :
+                root.variant == "danger" ? Theme.danger-hover :
+                root.variant == "secondary" ? Theme.surface-hover : #182030
+            ) : (
+                root.variant == "primary" ? Theme.accent :
+                root.variant == "danger" ? Theme.danger :
+                root.variant == "secondary" ? Theme.surface-card : transparent
+            );
+
+        border-width: (root.variant == "secondary" || root.variant == "ghost") ? 1px : 0px;
+        border-color: (root.variant == "secondary") ? Theme.border : (touch.has-hover ? Theme.border-light : transparent);
+
+        animate background { duration: 150ms; }
+        animate border-color { duration: 150ms; }
+
+        HorizontalLayout {
+            padding-left: 16px;
+            padding-right: 16px;
+            alignment: center;
+            spacing: 8px;
+
+            Text {
+                text: root.text;
+                color: !root.enabled ? Theme.text-muted :
+                    (root.variant == "primary" ? #ffffff :
+                     root.variant == "danger" ? #ffffff :
+                     root.variant == "ghost" ? (touch.has-hover ? Theme.text-primary : Theme.text-secondary) :
+                     Theme.text-primary);
+                font-family: Theme.font-family;
+                font-size: root.custom-font-size;
+                font-weight: 600;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+            }
+        }
+
+        touch := TouchArea {
+            enabled: root.enabled;
+            clicked => {
+                root.clicked();
+            }
+            mouse-cursor: root.enabled ? pointer : default;
+        }
+    }
+}

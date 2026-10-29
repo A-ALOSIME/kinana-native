@@ -1,0 +1,69 @@
+import { Theme } from "../theme.slint";
+
+export component KinanaInput {
+    in-out property <string> text: "";
+    in property <string> placeholder: "";
+    in property <string> label: "";
+    in property <bool> password: false;
+    in property <bool> enabled: true;
+    in property <InputType> input-type: password ? InputType.password : InputType.text;
+    
+    callback accepted();
+    callback edited(string);
+
+    VerticalLayout {
+        spacing: 6px;
+
+        if root.label != "": Text {
+            text: root.label;
+            color: Theme.text-secondary;
+            font-family: Theme.font-family;
+            font-size: 13px;
+            font-weight: 600;
+            horizontal-alignment: right;
+        }
+
+        rect := Rectangle {
+            min-height: 40px;
+            background: Theme.surface-card;
+            border-radius: 8px;
+            border-width: 1px;
+            border-color: input.has-focus ? Theme.border-focus : Theme.border;
+
+            animate border-color { duration: 150ms; }
+
+            HorizontalLayout {
+                padding-left: 12px;
+                padding-right: 12px;
+                alignment: stretch;
+
+                input := TextInput {
+                    text <=> root.text;
+                    input-type: root.input-type;
+                    enabled: root.enabled;
+                    color: Theme.text-primary;
+                    font-family: Theme.font-family;
+                    font-size: 14px;
+                    vertical-alignment: center;
+                    horizontal-alignment: right;
+                    accepted => { root.accepted(); }
+                    edited => { root.edited(self.text); }
+                }
+            }
+
+            if root.text == "" && !input.has-focus: HorizontalLayout {
+                padding-left: 12px;
+                padding-right: 12px;
+                alignment: stretch;
+                Text {
+                    text: root.placeholder;
+                    color: Theme.text-muted;
+                    font-family: Theme.font-family;
+                    font-size: 13px;
+                    vertical-alignment: center;
+                    horizontal-alignment: right;
+                }
+            }
+        }
+    }
+}

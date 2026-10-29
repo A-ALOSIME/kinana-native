@@ -1,0 +1,55 @@
+import { Theme } from "../theme.slint";
+import { KinanaButton } from "./button.slint";
+
+export component KinanaModal {
+    in property <string> title: "نافذة";
+    in property <length> modal-width: 480px;
+    in property <length> modal-height: 420px;
+    callback close();
+
+    Rectangle {
+        background: #000000.transparentize(0.4);
+        
+        // Block clicks to background
+        TouchArea {}
+
+        Rectangle {
+            width: root.modal-width;
+            height: root.modal-height;
+            border-radius: 14px;
+            background: Theme.surface;
+            border-width: 1px;
+            border-color: Theme.border;
+
+            VerticalLayout {
+                padding: 20px;
+                spacing: 16px;
+
+                // Title bar
+                HorizontalLayout {
+                    alignment: space-between;
+
+                    KinanaButton {
+                        text: "✕";
+                        variant: "ghost";
+                        custom-font-size: 14px;
+                        clicked => {
+                            root.close();
+                        }
+                    }
+
+                    Text {
+                        text: root.title;
+                        color: Theme.text-primary;
+                        font-family: Theme.font-family;
+                        font-size: 18px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+
+                @children
+            }
+        }
+    }
+}

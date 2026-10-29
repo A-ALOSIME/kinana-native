@@ -1,0 +1,123 @@
+import { Theme } from "../theme.slint";
+import { KinanaButton } from "./button.slint";
+
+export component ServiceCard {
+    in property <string> id: "";
+    in property <string> name: "خدمة";
+    in property <string> initial: "خ";
+    in property <color> badge-color: #10b981;
+    in property <int> accounts-count: 1;
+    in property <string> category: "عام";
+
+    callback clicked();
+    callback quick-copy();
+
+    min-width: 220px;
+    min-height: 140px;
+
+    rect := Rectangle {
+        border-radius: 12px;
+        background: touch.has-hover ? Theme.surface-hover : Theme.surface-card;
+        border-width: 1px;
+        border-color: touch.has-hover ? Theme.border-focus : Theme.border;
+
+        animate background { duration: 150ms; }
+        animate border-color { duration: 150ms; }
+
+        VerticalLayout {
+            padding: 16px;
+            spacing: 12px;
+
+            // Top row: Initial avatar + Category tag
+            HorizontalLayout {
+                alignment: space-between;
+
+                // Category Tag
+                Rectangle {
+                    border-radius: 6px;
+                    background: #1c2436;
+
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        padding-right: 8px;
+                        padding-top: 2px;
+                        padding-bottom: 2px;
+
+                        Text {
+                            text: root.category;
+                            color: Theme.text-secondary;
+                            font-family: Theme.font-family;
+                            font-size: 11px;
+                            font-weight: 500;
+                        }
+                    }
+                }
+
+                // Initial Avatar
+                Rectangle {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
+                    background: root.badge-color.transparentize(0.85);
+                    border-width: 1px;
+                    border-color: root.badge-color.transparentize(0.5);
+
+                    Text {
+                        text: root.initial;
+                        color: root.badge-color;
+                        font-family: Theme.font-family;
+                        font-size: 16px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            // Middle: Service Name & Accounts Count
+            VerticalLayout {
+                spacing: 4px;
+                alignment: center;
+
+                Text {
+                    text: root.name;
+                    color: Theme.text-primary;
+                    font-family: Theme.font-family;
+                    font-size: 16px;
+                    font-weight: 700;
+                    horizontal-alignment: right;
+                    overflow: elide;
+                }
+
+                Text {
+                    text: root.accounts-count <= 1 ? (root.accounts-count == 1 ? "حساب واحد" : "لا توجد حسابات") : (root.accounts-count == 2 ? "حسابان" : (root.accounts-count + " حسابات"));
+                    color: Theme.text-muted;
+                    font-family: Theme.font-family;
+                    font-size: 12px;
+                    horizontal-alignment: right;
+                }
+            }
+
+            // Bottom action: Quick copy password
+            HorizontalLayout {
+                alignment: end;
+
+                KinanaButton {
+                    text: "نسخ الرمز";
+                    variant: "secondary";
+                    custom-font-size: 12px;
+                    clicked => {
+                        root.quick-copy();
+                    }
+                }
+            }
+        }
+
+        touch := TouchArea {
+            clicked => {
+                root.clicked();
+            }
+            mouse-cursor: pointer;
+        }
+    }
+}
